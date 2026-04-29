@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TransportDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --coral: #E8705A;
+    --coral-dark: #c45a45;
+    --dark: #1C1B22;
+    --dark2: #26252e;
+    --bg: #F0EFF5;
+    --white: #ffffff;
+    --muted: rgba(0,0,0,0.38);
+    --border: rgba(0,0,0,0.08);
+    --success: #22c55e;
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: #111;
+    overflow: hidden;
+  }
+
+  /* ── PHONE SHELL ── */
+  .app {
+    width: 100%;
+    max-width: 420px;
+    height: 100dvh;
+    margin: 0 auto;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateX(20px);
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+  }
+  .screen.slide-back {
+    transform: translateX(-20px);
+  }
+
+  /* ══════════════════════════════
+     LOGIN SCREEN
+  ══════════════════════════════ */
+  #login {
+    background: var(--dark);
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1.75rem;
+    gap: 0;
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .login-logo-mark {
+    width: 68px;
+    height: 68px;
+    background: var(--coral);
+    border-radius: 20px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-logo-mark svg { width: 34px; height: 34px; fill: white; }
+
+  .login-logo h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+
+  .login-logo p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 4px;
+  }
+
+  .login-form { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+
+  .lf-group { display: flex; flex-direction: column; gap: 7px; }
+
+  .lf-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .lf-group input {
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 15px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+  }
+
+  .lf-group input:focus {
+    border-color: var(--coral);
+    background: rgba(232,112,90,0.08);
+  }
+
+  .lf-group input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .login-error {
+    font-size: 13px;
+    color: #f87171;
+    text-align: center;
+    min-height: 18px;
+    margin-top: -4px;
+  }
+
+  .btn-primary {
+    background: var(--coral);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ══════════════════════════════
+     HOME SCREEN
+  ══════════════════════════════ */
+  #home { background: var(--bg); overflow: hidden; }
+
+  .home-header {
+    background: var(--dark);
+    padding: 52px 22px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .hh-dots { position: absolute; top: 18px; left: 20px; display: flex; gap: 5px; }
+  .hh-dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+
+  .hh-grid { position: absolute; top: 16px; right: 20px; display: grid; grid-template-columns: repeat(2,1fr); gap: 3px; cursor: pointer; }
+  .hh-grid span { width: 7px; height: 7px; background: rgba(255,255,255,0.25); border-radius: 2px; }
+
+  .hh-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hh-avatar svg { width: 26px; height: 26px; fill: rgba(255,255,255,0.5); }
+
+  .hh-text h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--coral);
+  }
+  .hh-text p { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+
+  .home-content {
+    flex: 1; overflow-y: auto;
+    padding: 18px 18px 28px;
+    display: flex; flex-direction: column; gap: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .panel-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 2px;
+  }
+  .pb-dots { display: flex; gap: 5px; }
+  .pb-dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(0,0,0,0.12); }
+  .pb-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 3px; }
+  .pb-grid span { width: 6px; height: 6px; background: rgba(0,0,0,0.15); border-radius: 1px; }
+
+  /* Albarán Auto card */
+  .auto-card {
+    background: var(--white);
+    border-radius: 22px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .auto-card:active { transform: scale(0.98); }
+
+  .auto-card::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: rgba(232,112,90,0.06);
+    border-radius: 50%;
+  }
+
+  .ac-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+
+  .ac-title span {
+    display: block;
+    font-size: 10px; font-weight: 600;
+    color: var(--coral); letter-spacing: 0.8px;
+    text-transform: uppercase; margin-bottom: 3px;
+  }
+  .ac-title h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--dark); letter-spacing: -0.3px;
+  }
+
+  .ac-cam {
+    width: 42px; height: 42px;
+    background: var(--dark);
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ac-cam svg { width: 22px; height: 22px; fill: white; }
+
+  .ac-journey {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .ac-dep { display: flex; flex-direction: column; }
+  .ac-dep-label { font-size: 10px; color: var(--muted); font-weight: 500; }
+  .ac-dep-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700; color: var(--dark);
+  }
+
+  .jline { flex: 1; display: flex; align-items: center; }
+  .jdot-o { width: 10px; height: 10px; border: 2px solid var(--dark); border-radius: 50%; }
+  .jline-h { flex: 1; height: 1.5px; background: var(--dark); }
+  .jdot-f { width: 10px; height: 10px; background: var(--dark); border-radius: 50%; }
+
+  .ac-pin svg { width: 26px; height: 26px; fill: var(--dark); }
+
+  .ac-barcode { display: flex; gap: 3px; align-items: flex-end; height: 36px; margin-bottom: 10px; }
+  .ac-barcode div { background: var(--dark); border-radius: 1px; }
+
+  .ac-hint {
+    font-size: 11px; color: var(--muted);
+    text-align: center; font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  /* Portes Manual btn */
+  .manual-btn {
+    background: var(--coral);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .manual-btn:active { opacity: 0.88; transform: scale(0.98); }
+
+  .mb-text span:first-child {
+    display: block;
+    font-size: 10px; font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.6px; text-transform: uppercase;
+  }
+  .mb-text span:last-child {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 700; color: white;
+  }
+
+  .mb-arrow {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mb-arrow svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2.5; }
+
+  /* Bottom cards */
+  .bottom-card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 15px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+  }
+
+  .bc-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(28,27,34,0.06);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .bc-icon svg { width: 20px; height: 20px; }
+
+  .bc-text { flex: 1; }
+  .bc-text p { font-size: 13px; font-weight: 500; color: var(--dark); }
+  .bc-text span { font-size: 11px; color: var(--muted); }
+
+  .bc-chev svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; }
+
+  /* ══════════════════════════════
+     CAMERA SCREEN
+  ══════════════════════════════ */
+  #camera { background: #0a0a0f; }
+
+  .cam-topbar {
+    background: var(--dark);
+    padding: 52px 20px 18px;
+    display: flex; align-items: center; gap: 12px;
+    position: relative; flex-shrink: 0;
+  }
+  .cam-topbar .hh-dots { top: 18px; left: 20px; }
+  .cam-topbar .hh-grid { top: 16px; right: 20px; }
+
+  .back-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .back-btn svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2.5; }
+
+  .cam-topbar-text { }
+  .cam-topbar-text h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700; color: white;
+  }
+  .cam-topbar-text p { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+  .cam-area {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  #video-element {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .cam-sim-bg {
+    position: absolute; inset: 0;
+    background: #0d1117;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .cam-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0;
+  }
+
+  .scan-frame {
+    width: 240px; height: 170px;
+    position: relative; margin-bottom: 18px;
+  }
+
+  .sf-corner {
+    position: absolute; width: 28px; height: 28px;
+    border-color: var(--coral); border-style: solid;
+  }
+  .sf-tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+  .sf-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+  .sf-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+  .sf-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+  .scan-line {
+    position: absolute; left: 6px; right: 6px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--coral), transparent);
+    animation: scanMove 2s ease-in-out infinite;
+  }
+  @keyframes scanMove { 0%{top:6px} 100%{top:calc(100% - 6px)} }
+
+  .cam-hint {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+    text-align: center; padding: 0 40px; line-height: 1.6;
+  }
+
+  .cam-controls {
+    background: var(--dark);
+    padding: 22px 28px 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .shutter {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: var(--coral);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .shutter:active { transform: scale(0.93); opacity: 0.85; }
+  .shutter svg { width: 30px; height: 30px; fill: white; }
+
+  .cam-side {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cam-side svg { width: 22px; height: 22px; stroke: rgba(255,255,255,0.6); fill: none; stroke-width: 1.8; }
+
+  /* File input hidden */
+  #file-input { display: none; }
+
+  /* ══════════════════════════════
+     PROCESSING SCREEN
+  ══════════════════════════════ */
+  #processing {
+    background: var(--bg);
+    align-items: center; justify-content: center;
+  }
+
+  .proc-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 22px;
+    padding: 2rem;
+  }
+
+  .proc-spinner {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 3px solid rgba(232,112,90,0.15);
+    border-top-color: var(--coral);
+    animation: spin 0.85s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .proc-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 21px; font-weight: 700;
+    color: var(--dark); text-align: center;
+  }
+
+  .proc-steps {
+    display: flex; flex-direction: column; gap: 10px; width: 100%;
+  }
+
+  .proc-step {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--white); border-radius: 14px; padding: 13px 16px;
+  }
+
+  .ps-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .ps-dot.done { background: var(--success); }
+  .ps-dot.active { background: var(--coral); animation: pulse 1s ease-in-out infinite; }
+  .ps-dot.pending { background: rgba(0,0,0,0.12); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .ps-info { }
+  .ps-label { font-size: 13px; font-weight: 500; color: var(--dark); }
+  .ps-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  /* ══════════════════════════════
+     VERIFY SCREEN
+  ══════════════════════════════ */
+  #verify { background: var(--bg); overflow: hidden; }
+
+  .verify-content {
+    flex: 1; overflow-y: auto;
+    padding: 16px 16px 0;
+    -webkit-overflow-scrolling: touch;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .v-card {
+    background: var(--white);
+    border-radius: 20px; padding: 18px;
+  }
+
+  .v-card-title {
+    font-size: 10px; font-weight: 700;
+    color: var(--coral); letter-spacing: 0.8px;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+
+  .v-field {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .v-field:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .v-field-label {
+    font-size: 10px; color: var(--muted);
+    font-weight: 600; letter-spacing: 0.4px;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+
+  .v-field-row { display: flex; align-items: center; gap: 8px; }
+
+  .v-field-val {
+    font-size: 14px; font-weight: 500;
+    color: var(--dark); flex: 1; line-height: 1.4;
+  }
+
+  .v-edit-btn {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: rgba(0,0,0,0.04);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .v-edit-btn svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+
+  .v-field-input {
+    font-size: 14px; font-weight: 500;
+    color: var(--dark); flex: 1;
+    border: none; background: rgba(232,112,90,0.07);
+    border-radius: 8px; padding: 7px 10px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+
+  /* Selector pills */
+  .pill-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+
+  .pill {
+    padding: 7px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--dark);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .pill.selected {
+    background: var(--dark); color: white;
+    border-color: var(--dark);
+  }
+  .pill.selected.coral { background: var(--coral); border-color: var(--coral); }
+
+  /* Calc card */
+  .calc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .calc-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .cr-label { font-size: 13px; color: rgba(0,0,0,0.45); }
+  .cr-val { font-size: 14px; font-weight: 600; color: var(--dark); }
+
+  .calc-total {
+    background: rgba(232,112,90,0.08);
+    border-radius: 12px; padding: 13px 15px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px;
+  }
+  .ct-label { font-size: 14px; font-weight: 600; color: var(--dark); }
+  .ct-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700; color: var(--coral);
+  }
+
+  /* Optional field */
+  .opt-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .opt-input {
+    flex: 1; border: 1.5px solid var(--border); background: var(--bg);
+    border-radius: 10px; padding: 10px 13px;
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    color: var(--dark); outline: none;
+  }
+  .opt-input:focus { border-color: var(--coral); background: rgba(232,112,90,0.05); }
+
+  .toggle-sw {
+    position: relative; width: 46px; height: 26px; flex-shrink: 0;
+  }
+  .toggle-sw input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.12); border-radius: 13px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: white; top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle-sw input:checked + .toggle-slider { background: var(--coral); }
+  .toggle-sw input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+  .verify-footer {
+    padding: 14px 16px 32px;
+    display: flex; flex-direction: column; gap: 10px;
+    flex-shrink: 0; background: var(--bg);
+  }
+
+  .btn-confirm {
+    background: var(--dark); border: none; border-radius: 16px;
+    padding: 16px; font-size: 15px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; color: white;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-confirm:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-confirm svg { width: 18px; height: 18px; }
+
+  .btn-secondary {
+    background: none; border: 1.5px solid rgba(0,0,0,0.12);
+    border-radius: 16px; padding: 14px;
+    font-size: 14px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; color: var(--muted);
+    cursor: pointer; transition: background 0.15s;
+    width: 100%;
+  }
+  .btn-secondary:active { background: rgba(0,0,0,0.04); }
+
+  /* ══════════════════════════════
+     MANUAL SCREEN
+  ══════════════════════════════ */
+  #manual { background: var(--bg); overflow: hidden; }
+
+  .manual-content {
+    flex: 1; overflow-y: auto; padding: 16px;
+    -webkit-overflow-scrolling: touch;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .m-field { display: flex; flex-direction: column; gap: 7px; }
+
+  .m-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  .m-input {
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 13px 15px;
+    font-size: 15px; font-family: 'DM Sans', sans-serif;
+    color: var(--dark); outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .m-input:focus { border-color: var(--coral); }
+
+  select.m-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+
+  .manual-footer {
+    padding: 14px 16px 32px; flex-shrink: 0; background: var(--bg);
+  }
+
+  /* ══════════════════════════════
+     SUCCESS SCREEN
+  ══════════════════════════════ */
+  #success {
+    background: var(--dark);
+    align-items: center; justify-content: center;
+  }
+
+  .success-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 18px;
+    padding: 2.5rem 2rem; text-align: center;
+  }
+
+  .success-icon {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--success);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .success-icon svg { width: 38px; height: 38px; stroke: white; fill: none; stroke-width: 2.5; }
+
+  .success-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px; font-weight: 800; color: white;
+  }
+  .success-sub {
+    font-size: 14px; color: rgba(255,255,255,0.4);
+    line-height: 1.7; margin-top: -8px;
+  }
+
+  .success-data {
+    background: rgba(255,255,255,0.06);
+    border-radius: 18px; padding: 18px; width: 100%;
+  }
+  .sd-row {
+    display: flex; justify-content: space-between;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .sd-row:last-child { border-bottom: none; }
+  .sd-label { font-size: 12px; color: rgba(255,255,255,0.35); }
+  .sd-val { font-size: 12px; color: white; font-weight: 500; }
+
+  .google-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px; padding: 11px 16px;
+  }
+  .google-pill svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .google-pill span { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+  .btn-new {
+    background: var(--coral); border: none; border-radius: 16px;
+    padding: 16px 36px; font-size: 15px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; color: white;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    margin-top: 4px;
+  }
+  .btn-new:active { opacity: 0.85; transform: scale(0.98); }
+
+  /* ══════════════════════════════
+     LOADING OVERLAY
+  ══════════════════════════════ */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(28,27,34,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .loading-overlay.show { opacity: 1; pointer-events: all; }
+  .lo-inner {
+    background: var(--white); border-radius: 20px;
+    padding: 28px 36px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .lo-spinner {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid rgba(232,112,90,0.15);
+    border-top-color: var(--coral);
+    animation: spin 0.85s linear infinite;
+  }
+  .lo-text { font-size: 14px; font-weight: 500; color: var(--dark); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--dark); color: white;
+    padding: 12px 20px; border-radius: 12px;
+    font-size: 13px; font-weight: 500;
+    opacity: 0; transition: all 0.3s; z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #dc2626; }
+
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ LOGIN ══ -->
+  <div class="screen active" id="login">
+    <div class="login-logo">
+      <div class="login-logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-1 14H5c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h14c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1z"/><path d="M7 9h10v2H7zm0 4h7v2H7z"/></svg>
+      </div>
+      <h1>TransportDoc</h1>
+      <p>Gestión de albaranes y portes</p>
+    </div>
+    <div class="login-form">
+      <div class="lf-group">
+        <label>Usuario</label>
+        <input type="text" id="inp-user" placeholder="usuario" autocomplete="off" autocapitalize="none">
+      </div>
+      <div class="lf-group">
+        <label>Contraseña</label>
+        <input type="password" id="inp-pass" placeholder="••••••••">
+      </div>
+      <p class="login-error" id="login-error"></p>
+      <button class="btn-primary" id="btn-login">Entrar</button>
+    </div>
+  </div>
+
+  <!-- ══ HOME ══ -->
+  <div class="screen" id="home">
+    <div class="home-header">
+      <div class="hh-dots"><span></span><span></span><span></span></div>
+      <div class="hh-grid"><span></span><span></span><span></span><span></span></div>
+      <div class="hh-avatar">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="hh-text">
+        <h2 id="home-greeting">Hola, Aaron</h2>
+        <p>Panel de transporte</p>
+      </div>
+    </div>
+    <div class="home-content">
+      <div class="panel-bar">
+        <div class="pb-dots"><span></span><span></span><span></span></div>
+        <div class="pb-grid"><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Albarán Auto -->
+      <div class="auto-card" id="btn-albaran-auto">
+        <div class="ac-top">
+          <div class="ac-title">
+            <span>Escanear con cámara</span>
+            <h3>Albarán Auto</h3>
+          </div>
+          <div class="ac-cam">
+            <svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 0 1 8.8 12 3.2 3.2 0 0 1 12 8.8 3.2 3.2 0 0 1 15.2 12 3.2 3.2 0 0 1 12 15.2M20 4h-3.17L15 2H9L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/></svg>
+          </div>
+        </div>
+        <div class="ac-journey">
+          <div class="ac-dep">
+            <span class="ac-dep-label">Origen</span>
+            <span class="ac-dep-val">— —</span>
+          </div>
+          <div class="jline">
+            <div class="jdot-o"></div>
+            <div class="jline-h"></div>
+            <div class="jdot-f"></div>
+          </div>
+          <div class="ac-pin">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          </div>
+        </div>
+        <div class="ac-barcode" id="home-barcode"></div>
+        <div class="ac-hint">Pulsa para abrir la cámara</div>
+      </div>
+
+      <!-- Portes Manual -->
+      <div class="manual-btn" id="btn-portes-manual">
+        <div class="mb-text">
+          <span>Introducción manual</span>
+          <span>Portes Manual</span>
+        </div>
+        <div class="mb-arrow">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+      <!-- Bottom cards -->
+      <div class="bottom-card">
+        <div class="bc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        <div class="bc-text">
+          <p>Historial de envíos</p>
+          <span>Ver registros anteriores</span>
+        </div>
+        <div class="bc-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+      <div class="bottom-card" id="btn-logout">
+        <div class="bc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+        <div class="bc-text">
+          <p>Cerrar sesión</p>
+          <span>Salir de la cuenta</span>
+        </div>
+        <div class="bc-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CAMERA ══ -->
+  <div class="screen" id="camera">
+    <div class="cam-topbar">
+      <div class="hh-dots"><span></span><span></span><span></span></div>
+      <div class="hh-grid"><span></span><span></span><span></span><span></span></div>
+      <button class="back-btn" id="cam-back">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="cam-topbar-text">
+        <h3>Albarán Auto</h3>
+        <p>Encuadra el albarán completo</p>
+      </div>
+    </div>
+    <div class="cam-area">
+      <div class="cam-sim-bg" id="cam-sim">
+        <svg width="200" height="140" viewBox="0 0 200 140" opacity="0.15">
+          <rect width="200" height="140" fill="#334"/>
+          <rect x="10" y="10" width="180" height="15" rx="2" fill="#556"/>
+          <rect x="10" y="32" width="120" height="8" rx="2" fill="#445"/>
+          <rect x="10" y="46" width="150" height="8" rx="2" fill="#445"/>
+          <rect x="10" y="65" width="180" height="1" fill="#556"/>
+          <rect x="10" y="72" width="100" height="8" rx="2" fill="#445"/>
+          <rect x="10" y="86" width="140" height="8" rx="2" fill="#445"/>
+        </svg>
+      </div>
+      <video id="video-element" autoplay playsinline muted style="display:none"></video>
+      <canvas id="capture-canvas" style="display:none"></canvas>
+      <div class="cam-overlay">
+        <div class="scan-frame">
+          <div class="sf-corner sf-tl"></div>
+          <div class="sf-corner sf-tr"></div>
+          <div class="sf-corner sf-bl"></div>
+          <div class="sf-corner sf-br"></div>
+          <div class="scan-line"></div>
+        </div>
+        <p class="cam-hint">Coloca el albarán completo dentro del encuadre</p>
+      </div>
+    </div>
+    <div class="cam-controls">
+      <button class="cam-side" id="btn-gallery">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </button>
+      <button class="shutter" id="btn-capture">
+        <svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 0 1 8.8 12 3.2 3.2 0 0 1 12 8.8 3.2 3.2 0 0 1 15.2 12 3.2 3.2 0 0 1 12 15.2M20 4h-3.17L15 2H9L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/></svg>
+      </button>
+      <button class="cam-side" id="btn-flip">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.71"/></svg>
+      </button>
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="environment">
+  </div>
+
+  <!-- ══ PROCESSING ══ -->
+  <div class="screen" id="processing">
+    <div class="proc-wrap">
+      <div class="proc-spinner"></div>
+      <div class="proc-title">Analizando albarán…</div>
+      <div class="proc-steps">
+        <div class="proc-step">
+          <div class="ps-dot done" id="ps1"></div>
+          <div class="ps-info">
+            <div class="ps-label">Imagen capturada</div>
+            <div class="ps-sub" id="ps1-sub">Alta resolución · OK</div>
+          </div>
+        </div>
+        <div class="proc-step">
+          <div class="ps-dot active" id="ps2"></div>
+          <div class="ps-info">
+            <div class="ps-label">OCR avanzado</div>
+            <div class="ps-sub" id="ps2-sub">Extrayendo texto…</div>
+          </div>
+        </div>
+        <div class="proc-step">
+          <div class="ps-dot pending" id="ps3"></div>
+          <div class="ps-info">
+            <div class="ps-label">Identificando campos</div>
+            <div class="ps-sub" id="ps3-sub">En espera</div>
+          </div>
+        </div>
+        <div class="proc-step">
+          <div class="ps-dot pending" id="ps4"></div>
+          <div class="ps-info">
+            <div class="ps-label">Calculando zona y km</div>
+            <div class="ps-sub" id="ps4-sub">En espera</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VERIFY ══ -->
+  <div class="screen" id="verify">
+    <div class="cam-topbar">
+      <div class="hh-dots"><span></span><span></span><span></span></div>
+      <div class="hh-grid"><span></span><span></span><span></span><span></span></div>
+      <button class="back-btn" id="verify-back">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="cam-topbar-text">
+        <h3>Verificar datos</h3>
+        <p>Revisa y corrige si es necesario</p>
+      </div>
+    </div>
+
+    <div class="verify-content">
+      <!-- Datos albarán -->
+      <div class="v-card">
+        <div class="v-card-title">Datos del albarán</div>
+
+        <div class="v-field">
+          <div class="v-field-label">Centro</div>
+          <div class="v-field-row">
+            <div class="v-field-val" id="v-centro">—</div>
+          </div>
+        </div>
+
+        <div class="v-field">
+          <div class="v-field-label">Número de pedido</div>
+          <div class="v-field-row">
+            <div class="v-field-val" id="v-pedido">—</div>
+            <button class="v-edit-btn" onclick="editField('v-pedido')">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="v-field">
+          <div class="v-field-label">Origen</div>
+          <div class="v-field-row">
+            <div class="v-field-val" id="v-origen">—</div>
+            <button class="v-edit-btn" onclick="editField('v-origen')">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="v-field">
+          <div class="v-field-label">Destino</div>
+          <div class="v-field-row">
+            <div class="v-field-val" id="v-destino">—</div>
+            <button class="v-edit-btn" onclick="editField('v-destino')">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="v-field">
+          <div class="v-field-label">Peso / Bultos</div>
+          <div class="v-field-row">
+            <div class="v-field-val" id="v-peso">—</div>
+            <button class="v-edit-btn" onclick="editField('v-peso')">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cálculo -->
+      <div class="v-card">
+        <div class="v-card-title">Cálculo automático</div>
+        <div class="calc-row"><span class="cr-label">Distancia</span><span class="cr-val" id="v-km">— km</span></div>
+        <div class="calc-row"><span class="cr-label">Tipo vehículo</span><span class="cr-val" id="v-transporte">—</span></div>
+        <div class="calc-row"><span class="cr-label">Zona</span><span class="cr-val" id="v-zona">—</span></div>
+        <div class="calc-row"><span class="cr-label">Km extra</span><span class="cr-val" id="v-kmextra">—</span></div>
+      </div>
+
+      <!-- INC / DEV -->
+      <div class="v-card">
+        <div class="v-card-title">Incidencia / Devolución</div>
+        <div class="pill-group" id="incdv-pills">
+          <div class="pill selected" data-val="">Ninguna</div>
+          <div class="pill" data-val="INC">Incidencia</div>
+          <div class="pill" data-val="DEV">Devolución</div>
+        </div>
+      </div>
+
+      <!-- Extras -->
+      <div class="v-card">
+        <div class="v-card-title">Extras opcionales</div>
+
+        <div class="v-field">
+          <div class="v-field-label">Horas espera</div>
+          <input class="opt-input" type="number" id="v-horas-espera" placeholder="Dejar en blanco si no aplica" min="0">
+        </div>
+
+        <div class="v-field" style="margin-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="v-field-label">Servicio Grúa</div>
+            <label class="toggle-sw">
+              <input type="checkbox" id="v-grua-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="v-grua-horas-wrap" style="display:none;margin-top:10px">
+            <input class="opt-input" type="number" id="v-horas-grua" placeholder="Nº de horas de grúa" min="1">
+          </div>
+        </div>
+
+        <div class="v-field" style="margin-top:12px">
+          <div class="v-field-label">Comentario</div>
+          <textarea class="opt-input" id="v-comentario" rows="2" placeholder="Opcional…" style="resize:none;height:64px;padding-top:10px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="verify-footer">
+      <button class="btn-confirm" id="btn-enviar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Confirmar y enviar
+      </button>
+      <button class="btn-secondary" id="btn-rescan">Volver a escanear</button>
+    </div>
+  </div>
+
+  <!-- ══ MANUAL ══ -->
+  <div class="screen" id="manual">
+    <div class="cam-topbar">
+      <div class="hh-dots"><span></span><span></span><span></span></div>
+      <div class="hh-grid"><span></span><span></span><span></span><span></span></div>
+      <button class="back-btn" id="manual-back">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="cam-topbar-text">
+        <h3>Portes Manual</h3>
+        <p>Introduce los datos manualmente</p>
+      </div>
+    </div>
+
+    <div class="manual-content">
+      <div class="v-card">
+        <div class="v-card-title">Datos del albarán</div>
+
+        <div class="m-field">
+          <label class="m-label">Centro</label>
+          <select class="m-input" id="m-centro">
+            <option value="">Selecciona un centro…</option>
+          </select>
+        </div>
+
+        <div class="m-field" style="margin-top:12px">
+          <label class="m-label">Número de pedido (6 últimas cifras)</label>
+          <input class="m-input" type="text" id="m-pedido" placeholder="ej: 261820" maxlength="6" inputmode="numeric">
+        </div>
+
+        <div class="m-field" style="margin-top:12px">
+          <label class="m-label">Dirección de origen</label>
+          <input class="m-input" type="text" id="m-origen" placeholder="Calle, número, ciudad…">
+        </div>
+
+        <div class="m-field" style="margin-top:12px">
+          <label class="m-label">Dirección de destino</label>
+          <input class="m-input" type="text" id="m-destino" placeholder="Calle, número, ciudad…">
+        </div>
+
+        <div class="m-field" style="margin-top:12px">
+          <label class="m-label">Peso (kg)</label>
+          <input class="m-input" type="number" id="m-peso" placeholder="ej: 342" inputmode="decimal">
+        </div>
+      </div>
+
+      <!-- INC/DEV -->
+      <div class="v-card">
+        <div class="v-card-title">Incidencia / Devolución</div>
+        <div class="pill-group" id="m-incdv-pills">
+          <div class="pill selected" data-val="">Ninguna</div>
+          <div class="pill" data-val="INC">Incidencia</div>
+          <div class="pill" data-val="DEV">Devolución</div>
+        </div>
+      </div>
+
+      <!-- Extras -->
+      <div class="v-card">
+        <div class="v-card-title">Extras opcionales</div>
+
+        <div class="v-field">
+          <div class="v-field-label">Horas espera</div>
+          <input class="opt-input" type="number" id="m-horas-espera" placeholder="Dejar en blanco si no aplica" min="0">
+        </div>
+
+        <div class="v-field" style="margin-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="v-field-label">Servicio Grúa</div>
+            <label class="toggle-sw">
+              <input type="checkbox" id="m-grua-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="m-grua-horas-wrap" style="display:none;margin-top:10px">
+            <input class="opt-input" type="number" id="m-horas-grua" placeholder="Nº de horas de grúa" min="1">
+          </div>
+        </div>
+
+        <div class="v-field" style="margin-top:12px">
+          <div class="v-field-label">Comentario</div>
+          <textarea class="opt-input" id="m-comentario" rows="2" placeholder="Opcional…" style="resize:none;height:64px;padding-top:10px"></textarea>
+        </div>
+      </div>
+
+      <div style="height:8px"></div>
+    </div>
+
+    <div class="manual-footer">
+      <button class="btn-confirm" id="btn-manual-calc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Calcular y verificar
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SUCCESS ══ -->
+  <div class="screen" id="success">
+    <div class="success-wrap">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">¡Enviado!</div>
+      <div class="success-sub">El albarán ha sido registrado<br>correctamente en Google Sheets</div>
+      <div class="success-data">
+        <div class="sd-row"><span class="sd-label">Centro</span><span class="sd-val" id="s-centro">—</span></div>
+        <div class="sd-row"><span class="sd-label">Pedido</span><span class="sd-val" id="s-pedido">—</span></div>
+        <div class="sd-row"><span class="sd-label">Transporte</span><span class="sd-val" id="s-transporte">—</span></div>
+        <div class="sd-row"><span class="sd-label">Zona</span><span class="sd-val" id="s-zona">—</span></div>
+        <div class="sd-row"><span class="sd-label">Hora envío</span><span class="sd-val" id="s-hora">—</span></div>
+      </div>
+      <div class="google-pill">
+        <svg viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        <span>Registrado en Google Sheets</span>
+      </div>
+      <button class="btn-new" id="btn-nuevo">Nuevo albarán</button>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading">
+    <div class="lo-inner">
+      <div class="lo-spinner"></div>
+      <div class="lo-text" id="loading-text">Enviando datos…</div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ══════════════════════════════
+// CONFIG
+// ══════════════════════════════
+const VERCEL_URL = 'https://transportdoc-a52ihlzq7-hecbaals-projects.vercel.app/api/sheet';
+const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+
+const USERS = { 'admin': 'admin123', 'aaron': '1234' };
+
+const CENTROS = [
+  'Admira','Amuc','Audepro','Augado automoción ibérica','Barcino elevadores',
+  'Bedmar','Bedmar Panel lux','Bigmat Garro','Bosch',
+  'Bricodepot Cabrera Cesiones - A cargo','Bricodepot Cabrera Pedidos - A cargo',
+  'Bricodepot Cabrera Pedidos - Cobrado','Bricodepot Cabrera Pedidos - Transferencia',
+  'Bricodepot Parets Cesiones - A cargo','Bricodepot Parets Pedidos - A cargo',
+  'Bricodepot Parets Pedidos - Cobrado','Bricodepot Parets Pedidos - Transferencia',
+  'Coseca','Deco','Decoplac Valencia','Fercon Vallados','Gamar','Gamma','Greencourt',
+  'GTI IVAN','Guilera','Idaterm','Innidisa','Isoterm Valencia','Jardi Pond',
+  'Leroy Merlin Valencia','Manau','Marlo','Matter','Mausa Cornellà','Mausa Mataró',
+  'Mausa Montcada','Neatrans','Novoa',
+  'Obramat Alicante Cesiones','Obramat Alicante Pedidos',
+  'Obramat Badalona Cesiones','Obramat Badalona Pedidos',
+  'Obramat Castellón Cesiones','Obramat Castellón Pedidos',
+  'Obramat Finestrat Cesiones','Obramat Finestrat Pedidos',
+  'Obramat Girona Cesiones','Obramat Girona Pedidos',
+  'Obramat Hospitalet Cesiones','Obramat Hospitalet Pedidos',
+  'Obramat Lleida Cesiones','Obramat Lleida Pedidos',
+  'Obramat Sabadell Cesiones','Obramat Sabadell Pedidos',
+  'Obramat Terrassa',
+  'Obramat Valencia Cesiones','Obramat Valencia Pedidos',
+  'Obramat Vilanova Cesiones','Obramat Vilanova Pedidos',
+  'Open Garden','Pedro andamios','Pismec','PLB Viladecans','PVB','PVY',
+  'Sempre Verd','Soldadura Egara','Som solar','Tecmegarra',
+  'Transcano','Transgrucat','Varios','Vivers Ernest'
+];
+
+// ══════════════════════════════
+// STATE
+// ══════════════════════════════
+let currentUser = '';
+let capturedImageBase64 = '';
+let extractedData = {};
+let videoStream = null;
+
+// ══════════════════════════════
+// UTILS
+// ══════════════════════════════
+function showScreen(id, back = false) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active', 'slide-back');
+  });
+  const el = document.getElementById(id);
+  if (back) el.classList.add('slide-back');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('slide-back'), 10);
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function showLoading(text = 'Procesando…') {
+  document.getElementById('loading-text').textContent = text;
+  document.getElementById('loading').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+function getZona(km) {
+  if (km <= 10) return 1;
+  if (km <= 20) return 2;
+  if (km <= 30) return 3;
+  if (km <= 40) return 4;
+  if (km <= 60) return 5;
+  return 6;
+}
+
+function getTransporte(kg) {
+  return parseFloat(kg) > 500 ? 'Camión' : 'Furgoneta';
+}
+
+function getKmExtra(km) {
+  return km > 80 ? km - 80 : 0;
+}
+
+// Populate centros select
+function populateCentros() {
+  const sel = document.getElementById('m-centro');
+  CENTROS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+// Barcode decoration
+function drawBarcode() {
+  const bc = document.getElementById('home-barcode');
+  if (!bc) return;
+  bc.innerHTML = '';
+  [3,7,4,2,8,3,5,9,4,6,3,8,5,2,4,7,3,6,5,3,8,4,6,2].forEach(h => {
+    const d = document.createElement('div');
+    d.style.cssText = `width:4px;height:${h*3.5}px;border-radius:1px;background:var(--dark)`;
+    bc.appendChild(d);
+  });
+}
+
+// Edit field inline
+function editField(id) {
+  const el = document.getElementById(id);
+  if (el.tagName === 'DIV') {
+    const val = el.textContent;
+    const inp = document.createElement('input');
+    inp.className = 'v-field-input';
+    inp.value = val;
+    inp.onblur = () => {
+      const div = document.createElement('div');
+      div.className = 'v-field-val'; div.id = id;
+      div.textContent = inp.value;
+      inp.replaceWith(div);
+      if (id === 'v-peso') recalcFromPeso(inp.value);
+    };
+    el.replaceWith(inp);
+    inp.focus();
+  }
+}
+
+function recalcFromPeso(val) {
+  const kg = parseFloat(val);
+  if (!isNaN(kg)) {
+    document.getElementById('v-transporte').textContent = getTransporte(kg);
+  }
+}
+
+// ══════════════════════════════
+// LOGIN
+// ══════════════════════════════
+document.getElementById('btn-login').addEventListener('click', doLogin);
+document.getElementById('inp-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogin() {
+  const u = document.getElementById('inp-user').value.trim().toLowerCase();
+  const p = document.getElementById('inp-pass').value;
+  const err = document.getElementById('login-error');
+  if (USERS[u] && USERS[u] === p) {
+    currentUser = u;
+    document.getElementById('home-greeting').textContent = `Hola, ${u.charAt(0).toUpperCase()+u.slice(1)}`;
+    err.textContent = '';
+    showScreen('home');
+    drawBarcode();
+    populateCentros();
+  } else {
+    err.textContent = 'Usuario o contraseña incorrectos';
+  }
+}
+
+// ══════════════════════════════
+// HOME BUTTONS
+// ══════════════════════════════
+document.getElementById('btn-albaran-auto').addEventListener('click', () => {
+  showScreen('camera');
+  startCamera();
+});
+
+document.getElementById('btn-portes-manual').addEventListener('click', () => {
+  showScreen('manual');
+});
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  stopCamera();
+  showScreen('login');
+});
+
+// ══════════════════════════════
+// CAMERA
+// ══════════════════════════════
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    videoStream = stream;
+    const video = document.getElementById('video-element');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('cam-sim').style.display = 'none';
+  } catch(e) {
+    // fallback: use gallery
+    document.getElementById('cam-sim').style.display = 'flex';
+  }
+}
+
+function stopCamera() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  const video = document.getElementById('video-element');
+  video.style.display = 'none';
+  video.srcObject = null;
+  document.getElementById('cam-sim').style.display = 'flex';
+}
+
+document.getElementById('cam-back').addEventListener('click', () => {
+  stopCamera();
+  showScreen('home');
+});
+
+document.getElementById('btn-capture').addEventListener('click', captureAndProcess);
+
+document.getElementById('btn-gallery').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    capturedImageBase64 = ev.target.result.split(',')[1];
+    stopCamera();
+    await processImage();
+  };
+  reader.readAsDataURL(file);
+});
+
+async function captureAndProcess() {
+  const video = document.getElementById('video-element');
+  if (video.style.display === 'none') {
+    document.getElementById('file-input').click();
+    return;
+  }
+  const canvas = document.getElementById('capture-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
+  stopCamera();
+  await processImage();
+}
+
+// ══════════════════════════════
+// OCR VIA CLAUDE API
+// ══════════════════════════════
+async function processImage() {
+  showScreen('processing');
+  stepActive(2);
+
+  try {
+    // Step 2: OCR
+    const ocrResult = await callClaudeOCR(capturedImageBase64);
+    stepDone(2, 'Texto extraído correctamente');
+    stepActive(3);
+
+    // Step 3: Parse fields
+    const parsed = parseAlbaranData(ocrResult);
+    stepDone(3, `${Object.keys(parsed).length} campos identificados`);
+    stepActive(4);
+
+    // Step 4: Calculate km (simulated — real Google Maps needs backend key)
+    const km = await estimateDistance(parsed.origen, parsed.destino);
+    parsed.km = km;
+    parsed.zona = getZona(km);
+    parsed.transporte = getTransporte(parsed.pesoKg || 0);
+    parsed.kmExtra = getKmExtra(km);
+    stepDone(4, `${km} km · Zona ${parsed.zona}`);
+
+    extractedData = parsed;
+    setTimeout(() => showVerifyScreen(parsed), 600);
+
+  } catch(err) {
+    showToast('Error al procesar la imagen. Inténtalo de nuevo.', true);
+    showScreen('camera');
+    startCamera();
+  }
+}
+
+async function callClaudeOCR(base64Image) {
+  const response = await fetch(CLAUDE_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/jpeg', data: base64Image }
+          },
+          {
+            type: 'text',
+            text: `Analiza este albarán de transporte y extrae EXACTAMENTE estos campos en formato JSON:
+{
+  "numeroPedido": "solo las 6 últimas cifras del número de pedido",
+  "nombreOrigen": "nombre del punto de origen (ej: BADALONA)",
+  "direccionOrigen": "dirección completa de origen",
+  "direccionDestino": "dirección completa de destino",
+  "pesoKg": número_en_kg_como_float,
+  "bultos": número_entero
+}
+Si el albarán es de Obramat, el nombre de origen estará en DATOS DE ORIGEN -> Nombre.
+Responde SOLO con el JSON, sin texto adicional.`
+          }
+        ]
+      }]
+    })
+  });
+  const data = await response.json();
+  const text = data.content.map(i => i.text || '').join('');
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
+function parseAlbaranData(ocr) {
+  // Map origin name to centro list
+  const origenNombre = (ocr.nombreOrigen || '').toUpperCase();
+  let centro = '';
+
+  // Smart matching: find centro that contains the origin keyword
+  const keywords = origenNombre.split(/[\s,]+/).filter(w => w.length > 3);
+  for (const c of CENTROS) {
+    const cu = c.toUpperCase();
+    for (const kw of keywords) {
+      if (cu.includes(kw) && cu.includes('PEDIDOS')) {
+        centro = c; break;
+      }
+    }
+    if (centro) break;
+  }
+  // Fallback: any match
+  if (!centro) {
+    for (const c of CENTROS) {
+      if (keywords.some(kw => c.toUpperCase().includes(kw))) {
+        centro = c; break;
+      }
+    }
+  }
+
+  return {
+    centro: centro || ocr.nombreOrigen || '—',
+    numeroPedido: (ocr.numeroPedido || '').slice(-6),
+    origen: ocr.direccionOrigen || '—',
+    destino: ocr.direccionDestino || '—',
+    pesoKg: ocr.pesoKg || 0,
+    bultos: ocr.bultos || 0,
+    pesoDisplay: `${ocr.pesoKg || 0} kg · ${ocr.bultos || 0} bultos`
+  };
+}
+
+async function estimateDistance(origen, destino) {
+  try {
+    const res = await fetch('https://transportdoc-a52ihlzq7-hecbaals-projects.vercel.app/api/distance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origen, destino })
+    });
+    const data = await res.json();
+    if (data.success && data.km) return data.km;
+    throw new Error('No km returned');
+  } catch(e) {
+    // Fallback: straight-line approximation
+    showToast('No se pudo calcular la distancia exacta', true);
+    return 0;
+  }
+}
+
+// Processing steps
+function stepActive(n) {
+  const dot = document.getElementById(`ps${n}`);
+  if (!dot) return;
+  dot.className = 'ps-dot active';
+}
+function stepDone(n, sub) {
+  const dot = document.getElementById(`ps${n}`);
+  const subEl = document.getElementById(`ps${n}-sub`);
+  if (dot) dot.className = 'ps-dot done';
+  if (subEl && sub) subEl.textContent = sub;
+}
+
+// ══════════════════════════════
+// VERIFY SCREEN
+// ══════════════════════════════
+function showVerifyScreen(data) {
+  document.getElementById('v-centro').textContent = data.centro || '—';
+  document.getElementById('v-pedido').textContent = data.numeroPedido || '—';
+  document.getElementById('v-origen').textContent = data.origen || '—';
+  document.getElementById('v-destino').textContent = data.destino || '—';
+  document.getElementById('v-peso').textContent = data.pesoDisplay || '—';
+  document.getElementById('v-km').textContent = `${data.km || 0} km`;
+  document.getElementById('v-transporte').textContent = data.transporte || '—';
+  document.getElementById('v-zona').textContent = `Zona ${data.zona || '—'}`;
+  document.getElementById('v-kmextra').textContent = data.kmExtra > 0 ? `${data.kmExtra} km` : '—';
+
+  // Reset extras
+  document.getElementById('v-horas-espera').value = '';
+  document.getElementById('v-grua-toggle').checked = false;
+  document.getElementById('v-grua-horas-wrap').style.display = 'none';
+  document.getElementById('v-horas-grua').value = '';
+  document.getElementById('v-comentario').value = '';
+
+  // Reset pills
+  document.querySelectorAll('#incdv-pills .pill').forEach(p => p.classList.remove('selected'));
+  document.querySelector('#incdv-pills .pill[data-val=""]').classList.add('selected');
+
+  showScreen('verify');
+}
+
+// Pills
+document.getElementById('incdv-pills').addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if (!pill) return;
+  document.querySelectorAll('#incdv-pills .pill').forEach(p => p.classList.remove('selected'));
+  pill.classList.add('selected');
+});
+
+document.getElementById('m-incdv-pills').addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if (!pill) return;
+  document.querySelectorAll('#m-incdv-pills .pill').forEach(p => p.classList.remove('selected'));
+  pill.classList.add('selected');
+});
+
+// Grúa toggle
+document.getElementById('v-grua-toggle').addEventListener('change', e => {
+  document.getElementById('v-grua-horas-wrap').style.display = e.target.checked ? 'block' : 'none';
+});
+document.getElementById('m-grua-toggle').addEventListener('change', e => {
+  document.getElementById('m-grua-horas-wrap').style.display = e.target.checked ? 'block' : 'none';
+});
+
+document.getElementById('verify-back').addEventListener('click', () => showScreen('home'));
+document.getElementById('btn-rescan').addEventListener('click', () => {
+  showScreen('camera');
+  startCamera();
+});
+
+document.getElementById('btn-enviar').addEventListener('click', () => sendToSheet('verify'));
+
+// ══════════════════════════════
+// MANUAL SCREEN
+// ══════════════════════════════
+document.getElementById('manual-back').addEventListener('click', () => showScreen('home'));
+
+document.getElementById('btn-manual-calc').addEventListener('click', async () => {
+  const centro = document.getElementById('m-centro').value;
+  const pedido = document.getElementById('m-pedido').value;
+  const origen = document.getElementById('m-origen').value;
+  const destino = document.getElementById('m-destino').value;
+  const peso = parseFloat(document.getElementById('m-peso').value) || 0;
+
+  if (!centro || !pedido || !origen || !destino) {
+    showToast('Rellena todos los campos obligatorios', true);
+    return;
+  }
+
+  showLoading('Calculando distancia…');
+  const km = await estimateDistance(origen, destino);
+  hideLoading();
+
+  extractedData = {
+    centro, numeroPedido: pedido.slice(-6),
+    origen, destino,
+    pesoKg: peso, pesoDisplay: `${peso} kg`,
+    km, zona: getZona(km),
+    transporte: getTransporte(peso),
+    kmExtra: getKmExtra(km),
+    fromManual: true
+  };
+
+  showVerifyScreen(extractedData);
+});
+
+// ══════════════════════════════
+// SEND TO SHEET
+// ══════════════════════════════
+async function sendToSheet(source) {
+  const prefix = source === 'verify' ? 'v' : 'm';
+
+  const incDev = document.querySelector(`#${source === 'verify' ? 'incdv' : 'm-incdv'}-pills .pill.selected`)?.dataset.val || '';
+  const horasEspera = document.getElementById(`${source === 'verify' ? 'v' : 'm'}-horas-espera`).value;
+  const gruaOn = document.getElementById(`${source === 'verify' ? 'v' : 'm'}-grua-toggle`).checked;
+  const horasGrua = gruaOn ? document.getElementById(`${source === 'verify' ? 'v' : 'm'}-horas-grua`).value : '';
+  const comentario = document.getElementById(`${source === 'verify' ? 'v' : 'm'}-comentario`).value;
+
+  const kmExtra = extractedData.kmExtra > 0 ? extractedData.kmExtra : '';
+
+  const payload = {
+    centro: extractedData.centro,
+    numeroPedido: extractedData.numeroPedido,
+    incDev,
+    transporte: extractedData.transporte,
+    zona: `Zona ${extractedData.zona}`,
+    kmExtra,
+    horasEspera: horasEspera || '',
+    servicioGrua: gruaOn ? 'SI' : 'NO',
+    horasGrua: horasGrua || '',
+    comentario
+  };
+
+  showLoading('Enviando a Google Sheets…');
+
+  try {
+    const res = await fetch(VERCEL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    hideLoading();
+
+    if (data.success) {
+      // Success screen
+      document.getElementById('s-centro').textContent = payload.centro;
+      document.getElementById('s-pedido').textContent = payload.numeroPedido;
+      document.getElementById('s-transporte').textContent = payload.transporte;
+      document.getElementById('s-zona').textContent = payload.zona;
+      document.getElementById('s-hora').textContent = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      showScreen('success');
+    } else {
+      showToast('Error al enviar. Inténtalo de nuevo.', true);
+    }
+  } catch(err) {
+    hideLoading();
+    showToast('Error de conexión. Verifica tu red.', true);
+  }
+}
+
+document.getElementById('btn-nuevo').addEventListener('click', () => {
+  showScreen('home');
+  // Reset processing steps
+  ['ps1','ps2','ps3','ps4'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = i===0 ? 'ps-dot done' : 'ps-dot pending';
+  });
+  document.getElementById('ps1-sub').textContent = 'Alta resolución · OK';
+  document.getElementById('ps2-sub').textContent = 'Extrayendo texto…';
+  document.getElementById('ps3-sub').textContent = 'En espera';
+  document.getElementById('ps4-sub').textContent = 'En espera';
+});
+
+// Init
+drawBarcode();
+</script>
+</body>
+</html>
