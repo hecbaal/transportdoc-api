@@ -1241,7 +1241,7 @@
 // ══════════════════════════════
 // CONFIG
 // ══════════════════════════════
-const VERCEL_URL = 'https://transportdoc-a52ihlzq7-hecbaals-projects.vercel.app/api/sheet';
+const VERCEL_URL = 'https://transportdoc-api.vercel.app/api/sheet';
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 
 const USERS = { 'admin': 'admin123', 'aaron': '1234' };
@@ -1520,7 +1520,7 @@ async function processImage() {
 }
 
 async function callClaudeOCR(base64Image) {
-  const response = await fetch('https://transportdoc-a52ihlzq7-hecbaals-projects.vercel.app/api/ocr', {
+  const response = await fetch('https://transportdoc-api.vercel.app/api/ocr', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: base64Image })
@@ -1568,7 +1568,7 @@ function parseAlbaranData(ocr) {
 
 async function estimateDistance(origen, destino) {
   try {
-    const res = await fetch('https://transportdoc-a52ihlzq7-hecbaals-projects.vercel.app/api/distance', {
+    const res = await fetch('https://transportdoc-api.vercel.app/api/distance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ origen, destino })
