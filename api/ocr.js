@@ -9,6 +9,10 @@ export default async function handler(req, res) {
     const { image } = req.body;
     if (!image) return res.status(400).json({ success: false, error: 'No image' });
 
+    // Truncate image to max 1MB base64
+    const maxLen = 1_000_000;
+    const trimmed = image.length > maxLen ? image.substring(0, maxLen) : image;
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -17,7 +21,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{
             parts: [
-              { inline_data: { mime_type: 'image/jpeg', data: image } },
+              { inline_data: { mime_type: 'image/jpeg', data: trimmed } },
               { text: 'Analiza este albaran de transporte y devuelve SOLO este JSON sin texto adicional ni backticks:\n{"numeroPedido":"6 ultimas cifras","nombreOrigen":"nombre origen","direccionOrigen":"direccion origen completa","direccionDestino":"direccion destino completa","pesoKg":0,"bultos":0}' }
             ]
           }],
