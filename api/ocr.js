@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     if (!image) return res.status(400).json({ success: false, error: 'No image' });
     console.log('Image length:', image.length);
     const prompt = 'Analiza este albaran y devuelve SOLO este JSON sin backticks: {"numeroPedido":"6 ultimas cifras","nombreOrigen":"nombre origen","direccionOrigen":"direccion origen","direccionDestino":"direccion destino","pesoKg":0,"bultos":0}';
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
