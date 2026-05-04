@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>TransportDoc</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1548,14 +1549,31 @@ async function processImage() {
 }
 
 async function callClaudeOCR(base64Image) {
+  // Use Tesseract.js for OCR - free, no API key needed
+  document.getElementById('ps2-sub').textContent = 'Inicializando OCR...';
+  
+  const imageUrl = 'data:image/jpeg;base64,' + base64Image;
+  
+  const result = await Tesseract.recognize(imageUrl, 'spa', {
+    logger: m => {
+      if (m.status === 'recognizing text') {
+        document.getElementById('ps2-sub').textContent = 'Extrayendo texto... ' + Math.round(m.progress * 100) + '%';
+      }
+    }
+  });
+  
+  const text = result.data.text;
+  console.log('Tesseract extracted text:', text.substring(0, 500));
+  
+  // Send text to backend for parsing
   const response = await fetch('https://transportdoc-api.vercel.app/api/ocr', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64Image })
+    body: JSON.stringify({ text })
   });
-  const result = await response.json();
-  if (!result.success) throw new Error(result.error || 'OCR failed');
-  return result.data;
+  const parsed = await response.json();
+  if (!parsed.success) throw new Error(parsed.error || 'Parse failed');
+  return parsed.data;
 }
 
 function parseAlbaranData(ocr) {
