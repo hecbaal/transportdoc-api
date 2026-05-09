@@ -164,11 +164,6 @@
   .v-edit-btn svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
   .v-field-input { font-size: 14px; font-weight: 500; color: var(--dark); flex: 1; border: none; background: rgba(232,112,90,0.07); border-radius: 8px; padding: 7px 10px; font-family: 'DM Sans', sans-serif; outline: none; }
 
-  /* Confianza badge */
-  .conf-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
-  .conf-alta { background: rgba(34,197,94,0.12); color: #16a34a; }
-  .conf-media { background: rgba(245,158,11,0.12); color: #d97706; }
-  .conf-baja { background: rgba(239,68,68,0.12); color: #dc2626; }
 
   .pill-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .pill { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--border); background: var(--bg); color: var(--dark); cursor: pointer; transition: all 0.15s; }
@@ -201,13 +196,6 @@
   .btn-secondary { background: none; border: 1.5px solid rgba(0,0,0,0.12); border-radius: 16px; padding: 14px; font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--muted); cursor: pointer; transition: background 0.15s; width: 100%; }
   .btn-secondary:active { background: rgba(0,0,0,0.04); }
 
-  /* Confianza card */
-  .conf-card { background: var(--white); border-radius: 20px; padding: 16px 18px; }
-  .conf-global { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .conf-global-label { font-size: 12px; font-weight: 600; color: var(--dark); }
-  .conf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .conf-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border-radius: 10px; padding: 8px 11px; }
-  .conf-item-label { font-size: 11px; color: var(--muted); }
 
   /* MANUAL */
   #manual { background: var(--bg); overflow: hidden; }
@@ -247,10 +235,7 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.error { background: #dc2626; }
 
-  /* DEBUG PANEL */
-  .debug-panel { background: #0d1117; border-radius: 14px; padding: 14px; margin-top: 4px; }
-  .debug-panel pre { font-size: 10px; color: #58a6ff; white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow-y: auto; line-height: 1.5; }
-  .debug-toggle { font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; text-align: right; display: block; margin-top: 6px; }
+
 </style>
 </head>
 <body>
@@ -420,24 +405,6 @@
       <div class="cam-topbar-text"><h3>Verificar datos</h3><p>Revisa y corrige si es necesario</p></div>
     </div>
     <div class="verify-content">
-      <!-- Confianza OCR -->
-      <div class="conf-card" id="conf-card">
-        <div class="conf-global">
-          <span class="conf-global-label">Confianza OCR</span>
-          <span class="conf-badge" id="conf-global-badge">—</span>
-        </div>
-        <div class="conf-grid">
-          <div class="conf-item"><span class="conf-item-label">Nº Pedido</span><span class="conf-badge" id="conf-pedido">—</span></div>
-          <div class="conf-item"><span class="conf-item-label">Origen</span><span class="conf-badge" id="conf-origen">—</span></div>
-          <div class="conf-item"><span class="conf-item-label">Destino</span><span class="conf-badge" id="conf-destino">—</span></div>
-          <div class="conf-item"><span class="conf-item-label">Peso</span><span class="conf-badge" id="conf-peso">—</span></div>
-        </div>
-        <span class="debug-toggle" id="debug-toggle">Ver texto OCR extraído ▼</span>
-        <div id="debug-panel" style="display:none">
-          <div class="debug-panel"><pre id="debug-text"></pre></div>
-        </div>
-      </div>
-
       <!-- Datos albarán -->
       <div class="v-card">
         <div class="v-card-title">Datos del albarán</div>
@@ -458,12 +425,8 @@
           <div class="v-field-row"><div class="v-field-val" id="v-destino">—</div><button class="v-edit-btn" onclick="editField('v-destino')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
         </div>
         <div class="v-field">
-          <div class="v-field-label">Peso / Bultos</div>
+          <div class="v-field-label">Peso (kg)</div>
           <div class="v-field-row"><div class="v-field-val" id="v-peso">—</div><button class="v-edit-btn" onclick="editField('v-peso')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
-        </div>
-        <div class="v-field">
-          <div class="v-field-label">Fecha recogida</div>
-          <div class="v-field-row"><div class="v-field-val" id="v-fecha">—</div></div>
         </div>
         <div class="v-field">
           <div class="v-field-label">Matrícula transportista</div>
@@ -825,19 +788,59 @@ function parseAlbaranRobusto(rawText) {
   return r;
 }
 
-function matchCentro(nombreOrigen, nombreCargador) {
-  const search = `${nombreOrigen} ${nombreCargador}`.toUpperCase();
-  const stopwords = ['DE','LA','EL','LOS','LAS','DEL','SLU','S.L.U','S.L','SL','NOMBRE'];
-  const keywords = search.split(/[\s,.\-\/]+/).filter(w => w.length > 3 && !stopwords.includes(w));
+function matchCentro(nombreOrigen, nombreCargador, direccionOrigen) {
+  const haystack = `${nombreOrigen} ${nombreCargador} ${direccionOrigen}`.toUpperCase();
+
+  // ── Mapa ciudad → nombre Obramat ──────────────────────────
+  // Clave: palabra que puede aparecer en el texto OCR del albarán
+  // Valor: nombre exacto del centro en CENTROS (sin "Pedidos"/"Cesiones" — se añade después)
+  const OBRAMAT_CIUDADES = {
+    'HOSPITALET': 'Obramat Hospitalet',
+    "L'HOSPITALET": 'Obramat Hospitalet',
+    'BADALONA':   'Obramat Badalona',
+    'SABADELL':   'Obramat Sabadell',
+    'TERRASSA':   'Obramat Terrassa',
+    'TERRASA':    'Obramat Terrassa',
+    'GIRONA':     'Obramat Girona',
+    'LLEIDA':     'Obramat Lleida',
+    'LERIDA':     'Obramat Lleida',
+    'VILANOVA':   'Obramat Vilanova',
+    'ALICANTE':   'Obramat Alicante',
+    'VALENCIA':   'Obramat Valencia',
+    'CASTELLON':  'Obramat Castellón',
+    'CASTELLÓN':  'Obramat Castellón',
+    'FINESTRAT':  'Obramat Finestrat',
+  };
+
+  // ── Si el texto menciona Obramat, buscar ciudad ───────────
+  if (/OBRAMAT/i.test(haystack)) {
+    for (const [ciudad, base] of Object.entries(OBRAMAT_CIUDADES)) {
+      if (haystack.includes(ciudad)) {
+        // Buscar variante "Pedidos" primero, luego base
+        const pedidos = CENTROS.find(c => c.toUpperCase() === `${base} PEDIDOS`.toUpperCase());
+        if (pedidos) return pedidos;
+        const exact = CENTROS.find(c => c.toUpperCase().startsWith(base.toUpperCase()));
+        if (exact) return exact;
+      }
+    }
+    // Obramat detectado pero sin ciudad clara — devolver base sin ciudad
+    return 'Obramat';
+  }
+
+  // ── Para otros centros: matching por keywords ─────────────
+  const stopwords = new Set(['DE','LA','EL','LOS','LAS','DEL','SLU','S.L.U','S.L','SL','NOMBRE','NIF','DATOS','ORIGEN','CARGADOR']);
+  const keywords = haystack.split(/[\s,.\-\/()]+/).filter(w => w.length > 3 && !stopwords.has(w));
   if (!keywords.length) return '';
+
   const scores = CENTROS.map(c => {
     const cu = c.toUpperCase();
     let score = 0;
     for (const kw of keywords) if (cu.includes(kw)) score += kw.length;
     return { c, score };
   }).sort((a, b) => b.score - a.score);
+
   console.log('[CENTRO] Top 3:', scores.slice(0,3).map(s=>`${s.c}(${s.score})`));
-  return scores[0]?.score > 0 ? scores[0].c : '';
+  return scores[0]?.score > 3 ? scores[0].c : '';
 }
 
 async function processImageWithOCR(rawBase64) {
@@ -857,14 +860,18 @@ async function processImageWithOCR(rawBase64) {
   const parsed = parseAlbaranRobusto(rawText);
   parsed.rawText = rawText;
 
-  // Centro matching
-  parsed.centro = matchCentro(parsed.nombreOrigen, parsed.nombreCargador);
+  // Centro matching — pasar también direccionOrigen para detectar ciudad Obramat
+  parsed.centro = matchCentro(parsed.nombreOrigen, parsed.nombreCargador, parsed.direccionOrigen);
 
-  // Display strings
-  parsed.pesoDisplay = `${parsed.pesoKg} kg · ${parsed.bultos} bulto${parsed.bultos !== 1 ? 's' : ''}`;
-  parsed.origen = parsed.direccionOrigen || parsed.nombreOrigen || '—';
-  parsed.destino = [parsed.direccionDestino, parsed.localidadDestino, parsed.provinciaDestino]
+  // Origen = el centro detectado (no la dirección)
+  parsed.origen = parsed.centro || parsed.nombreOrigen || '—';
+
+  // Destino = solo dirección + municipio (para Google Maps)
+  parsed.destino = [parsed.direccionDestino, parsed.localidadDestino]
     .filter(Boolean).join(', ') || '—';
+
+  // Peso sin bultos
+  parsed.pesoDisplay = `${parsed.pesoKg} kg`;
   parsed.numeroPedido = (parsed.numeroPedido || '').slice(-6);
 
   const camposEncontrados = [parsed.numeroPedido, parsed.origen, parsed.destino, parsed.pesoKg]
@@ -940,12 +947,6 @@ function editField(id) {
   el.replaceWith(inp); inp.focus();
 }
 
-function confClass(val) {
-  return val === 'alta' ? 'conf-badge conf-alta' : val === 'media' ? 'conf-badge conf-media' : 'conf-badge conf-baja';
-}
-function confLabel(val) {
-  return val === 'alta' ? '✓ Alta' : val === 'media' ? '~ Media' : '✗ Baja';
-}
 
 // ══════════════════════════════════════════════════════════
 // LOGIN
@@ -1080,32 +1081,16 @@ async function estimateDistance(origen, destino) {
 // VERIFY SCREEN
 // ══════════════════════════════════════════════════════════
 function showVerifyScreen(data) {
-  // Datos principales
-  document.getElementById('v-centro').textContent   = data.centro || '—';
-  document.getElementById('v-pedido').textContent   = data.numeroPedido || '—';
-  document.getElementById('v-origen').textContent   = data.origen || '—';
-  document.getElementById('v-destino').textContent  = data.destino || '—';
-  document.getElementById('v-peso').textContent     = data.pesoDisplay || '—';
-  document.getElementById('v-fecha').textContent    = data.fechaRecogida || '—';
+  document.getElementById('v-centro').textContent    = data.centro || '—';
+  document.getElementById('v-pedido').textContent    = data.numeroPedido || '—';
+  document.getElementById('v-origen').textContent    = data.origen || '—';
+  document.getElementById('v-destino').textContent   = data.destino || '—';
+  document.getElementById('v-peso').textContent      = data.pesoDisplay || '—';
   document.getElementById('v-matricula').textContent = data.matricula || '—';
-  document.getElementById('v-km').textContent       = `${data.km || 0} km`;
+  document.getElementById('v-km').textContent        = `${data.km || 0} km`;
   document.getElementById('v-transporte').textContent = data.transporte || '—';
-  document.getElementById('v-zona').textContent     = `Zona ${data.zona || '—'}`;
-  document.getElementById('v-kmextra').textContent  = data.kmExtra > 0 ? `${data.kmExtra} km` : '—';
-
-  // Confianza
-  const conf = data.confianza || {};
-  const gb = document.getElementById('conf-global-badge');
-  gb.textContent = confLabel(conf.global);
-  gb.className = confClass(conf.global);
-  const fields = { pedido: conf.numeroPedido, origen: conf.origen, destino: conf.destino, peso: conf.peso };
-  for (const [k, v] of Object.entries(fields)) {
-    const el = document.getElementById(`conf-${k}`);
-    if (el) { el.textContent = confLabel(v); el.className = confClass(v); }
-  }
-
-  // Debug OCR
-  if (data.rawText) document.getElementById('debug-text').textContent = data.rawText.substring(0, 1500);
+  document.getElementById('v-zona').textContent      = `Zona ${data.zona || '—'}`;
+  document.getElementById('v-kmextra').textContent   = data.kmExtra > 0 ? `${data.kmExtra} km` : '—';
 
   // Reset extras
   document.getElementById('v-horas-espera').value = '';
@@ -1119,14 +1104,6 @@ function showVerifyScreen(data) {
   showScreen('verify');
 }
 
-// Debug toggle
-document.getElementById('debug-toggle').addEventListener('click', () => {
-  const p = document.getElementById('debug-panel');
-  const t = document.getElementById('debug-toggle');
-  const visible = p.style.display !== 'none';
-  p.style.display = visible ? 'none' : 'block';
-  t.textContent = visible ? 'Ver texto OCR extraído ▼' : 'Ocultar texto OCR ▲';
-});
 
 // Pills
 document.getElementById('incdv-pills').addEventListener('click', e => {
