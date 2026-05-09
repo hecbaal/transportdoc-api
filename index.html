@@ -428,10 +428,6 @@
           <div class="v-field-label">Peso (kg)</div>
           <div class="v-field-row"><div class="v-field-val" id="v-peso">—</div><button class="v-edit-btn" onclick="editField('v-peso')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
         </div>
-        <div class="v-field">
-          <div class="v-field-label">Matrícula transportista</div>
-          <div class="v-field-row"><div class="v-field-val" id="v-matricula">—</div></div>
-        </div>
       </div>
 
       <!-- Cálculo -->
@@ -759,15 +755,13 @@ function parseAlbaranRobusto(rawText) {
   // DESTINO
   const db = extractBlock(text, 'DATOS DEL DESTINO', ['DATOS DE LA ENTREGA','INVENTARIO','DATOS DE PAGO']);
   if (db) {
-    r.nombreDestino    = extractField(db, [/[Nn]ombre\s+[Cc]liente\s*[:\s]+([^\n]+)/i, /[Nn]ombre\s*[:\s]+([^\n]+)/i]) || '';
-    r.localidadDestino = cleanDestinoField(extractField(db, [/[Ll]ocalidad\s*[:\s]+([^\n]+)/i]) || '');
-    r.provinciaDestino = cleanDestinoField(extractField(db, [/[Pp]rovincia\s*[:\s]+([^\n]+)/i]) || '');
+    r.nombreDestino = extractField(db, [/[Nn]ombre\s+[Cc]liente\s*[:\s]+([^\n]+)/i]) || '';
 
-    // Dirección: coger solo hasta el primer salto o hasta que aparezca CP/Teléfono
+    // Dirección: solo la línea, sin CP ni teléfono
     const dirRaw = extractField(db, [/[Dd]irecci[oó]n\s*[:\s]+([^\n]+)/i]) || '';
     r.direccionDestino = cleanDestinoField(dirRaw);
 
-    // CP: buscar "Código Postal: XXXXX" específicamente
+    // CP: buscar "Código Postal: XXXXX" primero, luego CP suelto en el bloque
     r.cpDestino = extractField(db, [
       /[Cc][oó]digo\s+[Pp]ostal\s*[:\s]+(\d{5})/i,
       /\bCP\s*[:\s]+(\d{5})/i,
@@ -781,6 +775,10 @@ function parseAlbaranRobusto(rawText) {
         r.direccionDestino = r.direccionDestino.replace(cpInDir[1], '').trim().replace(/,\s*$/, '').trim();
       }
     }
+
+    // Guardar localidad y provincia igualmente (por si se necesitan en el futuro)
+    r.localidadDestino = cleanDestinoField(extractField(db, [/[Ll]ocalidad\s*[:\s]+([^\n]+)/i]) || '');
+    r.provinciaDestino = cleanDestinoField(extractField(db, [/[Pp]rovincia\s*[:\s]+([^\n]+)/i]) || '');
   }
 
   // ENTREGA
@@ -892,13 +890,10 @@ async function processImageWithOCR(rawBase64) {
   const centroBase = (parsed.centro || parsed.nombreOrigen || '').replace(/\s+(Pedidos|Cesiones)(\s*-.*)?$/i, '').trim();
   parsed.origen = centroBase || '—';
 
-  // Destino = "Dirección, CP Localidad, Provincia"
-  const dir = parsed.direccionDestino || '';
-  const cp  = parsed.cpDestino || '';
-  const loc = parsed.localidadDestino || '';
-  const prov = parsed.provinciaDestino || '';
-  const cpLoc = [cp, loc].filter(Boolean).join(' ');
-  parsed.destino = [dir, cpLoc, prov].filter(Boolean).join(', ') || '—';
+  // Destino = solo "Dirección, CP" — suficiente para Google Maps y sin ruido OCR
+  const dir  = parsed.direccionDestino || '';
+  const cp   = parsed.cpDestino || '';
+  parsed.destino = [dir, cp].filter(Boolean).join(', ') || '—';
 
   // Peso sin bultos
   parsed.pesoDisplay = `${parsed.pesoKg} kg`;
@@ -1116,7 +1111,6 @@ function showVerifyScreen(data) {
   document.getElementById('v-origen').textContent    = data.origen || '—';
   document.getElementById('v-destino').textContent   = data.destino || '—';
   document.getElementById('v-peso').textContent      = data.pesoDisplay || '—';
-  document.getElementById('v-matricula').textContent = data.matricula || '—';
   document.getElementById('v-km').textContent        = `${data.km || 0} km`;
   document.getElementById('v-transporte').textContent = data.transporte || '—';
   document.getElementById('v-zona').textContent      = `Zona ${data.zona || '—'}`;
