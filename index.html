@@ -788,47 +788,43 @@ function parseAlbaranRobusto(rawText) {
   return r;
 }
 
-function matchCentro(nombreOrigen, nombreCargador, direccionOrigen) {
+function matchCentro(nombreOrigen, nombreCargador, direccionOrigen, rawText) {
   const haystack = `${nombreOrigen} ${nombreCargador} ${direccionOrigen}`.toUpperCase();
+  // Bloque de origen del texto completo (primeras 400 chars — donde está el origen)
+  const origenZone = (rawText || '').substring(0, 400).toUpperCase();
 
-  // ── Mapa ciudad → nombre Obramat ──────────────────────────
-  // Clave: palabra que puede aparecer en el texto OCR del albarán
-  // Valor: nombre exacto del centro en CENTROS (sin "Pedidos"/"Cesiones" — se añade después)
   const OBRAMAT_CIUDADES = {
-    'HOSPITALET': 'Obramat Hospitalet',
+    'HOSPITALET':   'Obramat Hospitalet',
     "L'HOSPITALET": 'Obramat Hospitalet',
-    'BADALONA':   'Obramat Badalona',
-    'SABADELL':   'Obramat Sabadell',
-    'TERRASSA':   'Obramat Terrassa',
-    'TERRASA':    'Obramat Terrassa',
-    'GIRONA':     'Obramat Girona',
-    'LLEIDA':     'Obramat Lleida',
-    'LERIDA':     'Obramat Lleida',
-    'VILANOVA':   'Obramat Vilanova',
-    'ALICANTE':   'Obramat Alicante',
-    'VALENCIA':   'Obramat Valencia',
-    'CASTELLON':  'Obramat Castellón',
-    'CASTELLÓN':  'Obramat Castellón',
-    'FINESTRAT':  'Obramat Finestrat',
+    'BADALONA':     'Obramat Badalona',
+    'SABADELL':     'Obramat Sabadell',
+    'TERRASSA':     'Obramat Terrassa',
+    'TERRASA':      'Obramat Terrassa',
+    'GIRONA':       'Obramat Girona',
+    'LLEIDA':       'Obramat Lleida',
+    'LERIDA':       'Obramat Lleida',
+    'VILANOVA':     'Obramat Vilanova',
+    'ALICANTE':     'Obramat Alicante',
+    'VALENCIA':     'Obramat Valencia',
+    'CASTELLON':    'Obramat Castellón',
+    'CASTELLÓN':    'Obramat Castellón',
+    'FINESTRAT':    'Obramat Finestrat',
   };
 
-  // ── Si el texto menciona Obramat, buscar ciudad ───────────
-  if (/OBRAMAT/i.test(haystack)) {
-    for (const [ciudad, base] of Object.entries(OBRAMAT_CIUDADES)) {
-      if (haystack.includes(ciudad)) {
-        // Buscar variante "Pedidos" primero, luego base
-        const pedidos = CENTROS.find(c => c.toUpperCase() === `${base} PEDIDOS`.toUpperCase());
-        if (pedidos) return pedidos;
-        const exact = CENTROS.find(c => c.toUpperCase().startsWith(base.toUpperCase()));
-        if (exact) return exact;
-      }
+  const esObramat = /OBRAMAT|BRICOLAJE\s*BRICOMAN|BRICOMAN/i.test(haystack + origenZone);
+
+  for (const [ciudad, base] of Object.entries(OBRAMAT_CIUDADES)) {
+    const enOrigen = haystack.includes(ciudad) || origenZone.includes(ciudad);
+    if (enOrigen && (esObramat || haystack.includes(ciudad))) {
+      const pedidos = CENTROS.find(c => c.toUpperCase() === `${base} PEDIDOS`.toUpperCase());
+      if (pedidos) return pedidos;
+      const exact = CENTROS.find(c => c.toUpperCase().startsWith(base.toUpperCase()));
+      if (exact) return exact;
     }
-    // Obramat detectado pero sin ciudad clara — devolver base sin ciudad
-    return 'Obramat';
   }
 
-  // ── Para otros centros: matching por keywords ─────────────
-  const stopwords = new Set(['DE','LA','EL','LOS','LAS','DEL','SLU','S.L.U','S.L','SL','NOMBRE','NIF','DATOS','ORIGEN','CARGADOR']);
+  // Otros centros: matching por keywords
+  const stopwords = new Set(['DE','LA','EL','LOS','LAS','DEL','SLU','S.L.U','S.L','SL','NOMBRE','NIF','DATOS','ORIGEN','CARGADOR','BRICOMAN','BRICOLAJE']);
   const keywords = haystack.split(/[\s,.\-\/()]+/).filter(w => w.length > 3 && !stopwords.has(w));
   if (!keywords.length) return '';
 
@@ -860,8 +856,8 @@ async function processImageWithOCR(rawBase64) {
   const parsed = parseAlbaranRobusto(rawText);
   parsed.rawText = rawText;
 
-  // Centro matching — pasar también direccionOrigen para detectar ciudad Obramat
-  parsed.centro = matchCentro(parsed.nombreOrigen, parsed.nombreCargador, parsed.direccionOrigen);
+  // Centro matching — usar también el texto completo para detectar ciudad
+  parsed.centro = matchCentro(parsed.nombreOrigen, parsed.nombreCargador, parsed.direccionOrigen, rawText);
 
   // Origen = el centro detectado (no la dirección)
   parsed.origen = parsed.centro || parsed.nombreOrigen || '—';
