@@ -1108,33 +1108,49 @@ async function processImage() {
   }
 }
 
+async function geocodificar(direccion) {
+  // Intentar extraer CP de la dirección para pasarlo como parámetro separado
+  const cpMatch = direccion.match(/\b(\d{5})\b/);
+  const cp = cpMatch ? cpMatch[1] : null;
+  const dirSinCP = cp ? direccion.replace(cp, '').replace(/,\s*,/, ',').trim().replace(/,\s*$/, '') : direccion;
+
+  // Con CP separado Nominatim es mucho más preciso
+  let url;
+  if (cp) {
+    url = `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(dirSinCP)}&postalcode=${cp}&country=es&format=json&limit=1`;
+  } else {
+    url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(direccion)}&format=json&limit=1&countrycodes=es`;
+  }
+
+  const res = await fetch(url, {
+    headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0' }
+  });
+  const data = await res.json();
+
+  // Si no encuentra con street+postalcode, reintentar con búsqueda libre
+  if (!data.length && cp) {
+    const url2 = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(dirSinCP + ', ' + cp + ', España')}&format=json&limit=1&countrycodes=es`;
+    const res2 = await fetch(url2, { headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0' } });
+    const data2 = await res2.json();
+    return data2[0] || null;
+  }
+
+  return data[0] || null;
+}
+
 async function estimateDistance(origen, destino) {
   try {
-    // Geocodificar origen
-    const geoOri = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(origen)}&format=json&limit=1&countrycodes=es`,
-      { headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0 (transportdoc-app)' } }
-    );
-    const dataOri = await geoOri.json();
-    if (!dataOri.length) { showToast('Origen no encontrado en el mapa', false); return 0; }
+    const geoOri = await geocodificar(origen);
+    if (!geoOri) { showToast('Origen no encontrado en el mapa', false); return 0; }
 
-    // Geocodificar destino
-    const geoDst = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destino)}&format=json&limit=1&countrycodes=es`,
-      { headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0 (transportdoc-app)' } }
-    );
-    const dataDst = await geoDst.json();
-    if (!dataDst.length) { showToast('Destino no encontrado en el mapa', false); return 0; }
+    const geoDst = await geocodificar(destino);
+    if (!geoDst) { showToast('Destino no encontrado en el mapa', false); return 0; }
 
-    const { lon: lon1, lat: lat1 } = dataOri[0];
-    const { lon: lon2, lat: lat2 } = dataDst[0];
+    console.log('[DISTANCIA] Origen geocodificado:', geoOri.display_name);
+    console.log('[DISTANCIA] Destino geocodificado:', geoDst.display_name);
 
-    console.log('[DISTANCIA] Origen geocodificado:', dataOri[0].display_name);
-    console.log('[DISTANCIA] Destino geocodificado:', dataDst[0].display_name);
-
-    // Calcular ruta con OSRM (acepta peticiones desde el navegador)
     const osrm = await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`
+      `https://router.project-osrm.org/route/v1/driving/${geoOri.lon},${geoOri.lat};${geoDst.lon},${geoDst.lat}?overview=false`
     );
     const osrmData = await osrm.json();
     const km = Math.round(osrmData.routes[0].distance / 1000);
