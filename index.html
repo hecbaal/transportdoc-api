@@ -749,9 +749,27 @@ function parseAlbaranRobusto(rawText) {
     r.nombreDestino    = extractField(db, [/[Nn]ombre\s+[Cc]liente\s*[:\s]+([^\n]+)/i, /[Nn]ombre\s*[:\s]+([^\n]+)/i]) || '';
     r.localidadDestino = extractField(db, [/[Ll]ocalidad\s*[:\s]+([^\n]+)/i]) || '';
     r.provinciaDestino = extractField(db, [/[Pp]rovincia\s*[:\s]+([^\n]+)/i]) || '';
+
+    // Dirección — puede venir con CP pegado: "Calle Manila 41" o "Calle Manila 41\nCódigo Postal: 08034"
     r.direccionDestino = extractField(db, [/[Dd]irecci[oó]n\s*[:\s]+([^\n]+)/i]) || '';
-    r.cpDestino        = extractField(db, [/[Cc][oó]digo\s+[Pp]ostal\s*[:\s]+(\d{5})/i, /\b(\d{5})\b/]) || '';
-    r.telefonoDestino  = extractField(db, [/[Tt]el[eé]f[a-z]*\s*[:\s]+([+\d\s]{9,15})/i, /([+]34[\d\s]{9,12})/]) || '';
+
+    // CP — buscar explícitamente "Código Postal" o 5 dígitos tras la dirección
+    r.cpDestino = extractField(db, [
+      /[Cc][oó]digo\s+[Pp]ostal\s*[:\s]+(\d{5})/i,
+      /CP\s*[:\s]+(\d{5})/i,
+      /\b(0[0-9]{4}|[1-9][0-9]{4})\b/,  // cualquier CP español válido
+    ]) || '';
+
+    r.telefonoDestino = extractField(db, [/[Tt]el[eé]f[a-z]*\s*[:\s]+([+\d\s]{9,15})/i, /([+]34[\d\s]{9,12})/]) || '';
+
+    // Limpiar: si la dirección tiene el CP pegado al final, extraerlo
+    if (!r.cpDestino) {
+      const cpInDir = r.direccionDestino.match(/\b(\d{5})\b/);
+      if (cpInDir) {
+        r.cpDestino = cpInDir[1];
+        r.direccionDestino = r.direccionDestino.replace(cpInDir[1], '').trim().replace(/,\s*$/, '');
+      }
+    }
   }
 
   // ENTREGA
@@ -859,12 +877,17 @@ async function processImageWithOCR(rawBase64) {
   // Centro matching — usar también el texto completo para detectar ciudad
   parsed.centro = matchCentro(parsed.nombreOrigen, parsed.nombreCargador, parsed.direccionOrigen, rawText);
 
-  // Origen = el centro detectado (no la dirección)
-  parsed.origen = parsed.centro || parsed.nombreOrigen || '—';
+  // Origen = centro base sin "Pedidos"/"Cesiones" (para Google Maps)
+  const centroBase = (parsed.centro || parsed.nombreOrigen || '').replace(/\s+(Pedidos|Cesiones)(\s*-.*)?$/i, '').trim();
+  parsed.origen = centroBase || '—';
 
-  // Destino = solo dirección + municipio (para Google Maps)
-  parsed.destino = [parsed.direccionDestino, parsed.localidadDestino]
-    .filter(Boolean).join(', ') || '—';
+  // Destino = "Dirección, CP Localidad, Provincia"
+  const dir = parsed.direccionDestino || '';
+  const cp  = parsed.cpDestino || '';
+  const loc = parsed.localidadDestino || '';
+  const prov = parsed.provinciaDestino || '';
+  const cpLoc = [cp, loc].filter(Boolean).join(' ');
+  parsed.destino = [dir, cpLoc, prov].filter(Boolean).join(', ') || '—';
 
   // Peso sin bultos
   parsed.pesoDisplay = `${parsed.pesoKg} kg`;
