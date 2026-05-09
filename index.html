@@ -1109,33 +1109,34 @@ async function processImage() {
 }
 
 async function geocodificar(direccion) {
-  // Intentar extraer CP de la dirección para pasarlo como parámetro separado
   const cpMatch = direccion.match(/\b(\d{5})\b/);
   const cp = cpMatch ? cpMatch[1] : null;
-  const dirSinCP = cp ? direccion.replace(cp, '').replace(/,\s*,/, ',').trim().replace(/,\s*$/, '') : direccion;
 
-  // Con CP separado Nominatim es mucho más preciso
-  let url;
-  if (cp) {
-    url = `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(dirSinCP)}&postalcode=${cp}&country=es&format=json&limit=1`;
-  } else {
-    url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(direccion)}&format=json&limit=1&countrycodes=es`;
-  }
-
-  const res = await fetch(url, {
-    headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0' }
-  });
+  // Photon — mejor motor que Nominatim para España, filtramos por bbox España
+  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(direccion)}&limit=10&lang=es&bbox=-9.5,35.9,4.6,43.9`;
+  const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
   const data = await res.json();
 
-  // Si no encuentra con street+postalcode, reintentar con búsqueda libre
-  if (!data.length && cp) {
-    const url2 = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(dirSinCP + ', ' + cp + ', España')}&format=json&limit=1&countrycodes=es`;
-    const res2 = await fetch(url2, { headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0' } });
-    const data2 = await res2.json();
-    return data2[0] || null;
+  if (!data.features?.length) {
+    console.warn('[GEO] Sin resultados para:', direccion);
+    return null;
   }
 
-  return data[0] || null;
+  // Si tenemos CP, filtrar por CP exacto — máxima precisión
+  if (cp) {
+    const match = data.features.find(f => f.properties?.postcode === cp);
+    if (match) {
+      const p = match.properties;
+      console.log('[GEO] ✓ CP exacto:', p.name, p.postcode, p.city);
+      return { lon: match.geometry.coordinates[0], lat: match.geometry.coordinates[1], display_name: `${p.name}, ${p.postcode} ${p.city || ''}` };
+    }
+  }
+
+  // Sin match de CP — usar primer resultado de España
+  const esp = data.features.find(f => f.properties?.countrycode === 'ES') || data.features[0];
+  const p = esp.properties;
+  console.log('[GEO] Primer resultado ES:', p.name, p.postcode, p.city);
+  return { lon: esp.geometry.coordinates[0], lat: esp.geometry.coordinates[1], display_name: `${p.name}, ${p.postcode || ''} ${p.city || ''}` };
 }
 
 async function estimateDistance(origen, destino) {
@@ -1146,8 +1147,8 @@ async function estimateDistance(origen, destino) {
     const geoDst = await geocodificar(destino);
     if (!geoDst) { showToast('Destino no encontrado en el mapa', false); return 0; }
 
-    console.log('[DISTANCIA] Origen geocodificado:', geoOri.display_name);
-    console.log('[DISTANCIA] Destino geocodificado:', geoDst.display_name);
+    console.log('[DISTANCIA] Origen:', geoOri.display_name);
+    console.log('[DISTANCIA] Destino:', geoDst.display_name);
 
     const osrm = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${geoOri.lon},${geoOri.lat};${geoDst.lon},${geoDst.lat}?overview=false`
