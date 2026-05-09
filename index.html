@@ -1110,14 +1110,42 @@ async function processImage() {
 
 async function estimateDistance(origen, destino) {
   try {
-    const res = await fetch('https://transportdoc-api.vercel.app/api/distance', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ origen, destino })
-    });
-    const data = await res.json();
-    if (data.success && data.km) return data.km;
-  } catch(e) { showToast('Distancia no disponible', false); }
-  return 0;
+    // Geocodificar origen
+    const geoOri = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(origen)}&format=json&limit=1&countrycodes=es`,
+      { headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0 (transportdoc-app)' } }
+    );
+    const dataOri = await geoOri.json();
+    if (!dataOri.length) { showToast('Origen no encontrado en el mapa', false); return 0; }
+
+    // Geocodificar destino
+    const geoDst = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destino)}&format=json&limit=1&countrycodes=es`,
+      { headers: { 'Accept-Language': 'es', 'User-Agent': 'TransportDoc/1.0 (transportdoc-app)' } }
+    );
+    const dataDst = await geoDst.json();
+    if (!dataDst.length) { showToast('Destino no encontrado en el mapa', false); return 0; }
+
+    const { lon: lon1, lat: lat1 } = dataOri[0];
+    const { lon: lon2, lat: lat2 } = dataDst[0];
+
+    console.log('[DISTANCIA] Origen geocodificado:', dataOri[0].display_name);
+    console.log('[DISTANCIA] Destino geocodificado:', dataDst[0].display_name);
+
+    // Calcular ruta con OSRM (acepta peticiones desde el navegador)
+    const osrm = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`
+    );
+    const osrmData = await osrm.json();
+    const km = Math.round(osrmData.routes[0].distance / 1000);
+    console.log('[DISTANCIA] Resultado:', km, 'km');
+    return km;
+
+  } catch(e) {
+    console.error('[DISTANCIA] Error:', e.message);
+    showToast('Error calculando distancia', false);
+    return 0;
+  }
 }
 
 // ══════════════════════════════════════════════════════════
