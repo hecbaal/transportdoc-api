@@ -588,9 +588,23 @@ const CENTROS = [
   'Transcano','Transgrucat','Varios','Vivers Ernest'
 ];
 
-// ══════════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════════
+// Direcciones físicas reales de los centros — para geocodificación correcta
+const CENTROS_DIRECCIONES = {
+  'Obramat Hospitalet':  "Carrer de les Ciències, 140, 08908 L'Hospitalet de Llobregat, Barcelona",
+  'Obramat Badalona':    "Avinguda de Conflent, s/n, 08915 Badalona, Barcelona",
+  'Obramat Terrassa':    "Av. del Vallès, 484, 08227 Terrassa, Barcelona",
+  'Obramat Sabadell':    "Carrer de la Serra de Galliners, 24, 08205 Sabadell, Barcelona",
+  'Obramat Girona':      "Lloc Sector Margesa, 1, 17190 Girona",
+  'Obramat Massanassa':  "Avinguda de la Generalitat Valenciana, 2, 46470 Massanassa, Valencia",
+};
+
+// Devuelve la dirección física de un centro para usar en el cálculo de distancia
+function getDireccionFisica(centro) {
+  if (!centro) return null;
+  // Normalizar — quitar sufijo "Pedidos"/"Cesiones"
+  const base = centro.replace(/\s+(Pedidos|Cesiones)(\s*-.*)?$/i, '').trim();
+  return CENTROS_DIRECCIONES[base] || null;
+}
 let currentUser = '';
 let capturedImageBase64 = '';
 let extractedData = {};
@@ -1071,9 +1085,13 @@ async function processImage() {
   try {
     const parsed = await processImageWithOCR(capturedImageBase64);
 
-    // Step 4: distancia
+    // Step 4: distancia — usar dirección física del centro, no el nombre
     stepActive(4, 'Calculando distancia…');
-    const km = await estimateDistance(parsed.origen, parsed.destino);
+    const origenFisico = getDireccionFisica(parsed.centro) || parsed.origen;
+    if (!getDireccionFisica(parsed.centro)) {
+      console.warn('[DISTANCIA] Sin dirección física para:', parsed.centro, '— usando origen OCR');
+    }
+    const km = await estimateDistance(origenFisico, parsed.destino);
     parsed.km = km;
     parsed.zona = getZona(km);
     parsed.transporte = getTransporte(parsed.pesoKg);
