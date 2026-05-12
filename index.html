@@ -1108,35 +1108,32 @@ async function processImage() {
   }
 }
 
+const LOCATIONIQ_KEY = 'pk.4edd95a1f159c7c576a87ede7b774857';
+
 async function geocodificar(direccion) {
   const cpMatch = direccion.match(/\b(\d{5})\b/);
   const cp = cpMatch ? cpMatch[1] : null;
 
-  // Photon — mejor motor que Nominatim para España, filtramos por bbox España
-  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(direccion)}&limit=10&lang=es&bbox=-9.5,35.9,4.6,43.9`;
-  const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+  const url = `https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(direccion)}&format=json&limit=5&countrycodes=es&addressdetails=1`;
+
+  const res = await fetch(url);
+  if (!res.ok) { console.error('[GEO] Error LocationIQ:', res.status); return null; }
   const data = await res.json();
 
-  if (!data.features?.length) {
-    console.warn('[GEO] Sin resultados para:', direccion);
-    return null;
-  }
+  if (!data?.length) { console.warn('[GEO] Sin resultados para:', direccion); return null; }
 
-  // Si tenemos CP, filtrar por CP exacto — máxima precisión
+  // Si tenemos CP, filtrar por CP exacto entre los resultados
   if (cp) {
-    const match = data.features.find(f => f.properties?.postcode === cp);
+    const match = data.find(r => r.address?.postcode?.replace(/\s/g,'') === cp);
     if (match) {
-      const p = match.properties;
-      console.log('[GEO] ✓ CP exacto:', p.name, p.postcode, p.city);
-      return { lon: match.geometry.coordinates[0], lat: match.geometry.coordinates[1], display_name: `${p.name}, ${p.postcode} ${p.city || ''}` };
+      console.log('[GEO] ✓ CP exacto:', match.display_name);
+      return { lon: match.lon, lat: match.lat, display_name: match.display_name };
     }
   }
 
-  // Sin match de CP — usar primer resultado de España
-  const esp = data.features.find(f => f.properties?.countrycode === 'ES') || data.features[0];
-  const p = esp.properties;
-  console.log('[GEO] Primer resultado ES:', p.name, p.postcode, p.city);
-  return { lon: esp.geometry.coordinates[0], lat: esp.geometry.coordinates[1], display_name: `${p.name}, ${p.postcode || ''} ${p.city || ''}` };
+  // Sin match exacto — usar primer resultado
+  console.log('[GEO] Primer resultado:', data[0].display_name);
+  return { lon: data[0].lon, lat: data[0].lat, display_name: data[0].display_name };
 }
 
 async function estimateDistance(origen, destino) {
