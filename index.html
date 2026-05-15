@@ -1248,18 +1248,6 @@ function showVerifyScreen(data) {
   showScreen('verify');
 }
 
-  // Reset extras
-  document.getElementById('v-horas-espera').value = '';
-  document.getElementById('v-grua-toggle').checked = false;
-  document.getElementById('v-grua-horas-wrap').style.display = 'none';
-  document.getElementById('v-horas-grua').value = '';
-  document.getElementById('v-comentario').value = '';
-  document.querySelectorAll('#incdv-pills .pill').forEach(p => p.classList.remove('selected'));
-  document.querySelector('#incdv-pills .pill[data-val=""]').classList.add('selected');
-
-  showScreen('verify');
-}
-
 
 // Pills
 document.getElementById('incdv-pills').addEventListener('click', e => {
