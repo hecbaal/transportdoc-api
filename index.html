@@ -956,6 +956,7 @@ function matchCentroFromText(text) {
 }
 
 
+async function processImageWithOCR(rawBase64) {
   stepActive(2, 'Mejorando imagen…');
   const processed = await preprocessImageForOCR(rawBase64);
 
