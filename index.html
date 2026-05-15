@@ -413,30 +413,13 @@
           <div class="v-field-row"><div class="v-field-val" id="v-centro">—</div><button class="v-edit-btn" onclick="editField('v-centro')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
         </div>
         <div class="v-field">
-          <div class="v-field-label">Número de pedido</div>
+          <div class="v-field-label">Nº Albarán / Pedido</div>
           <div class="v-field-row"><div class="v-field-val" id="v-pedido">—</div><button class="v-edit-btn" onclick="editField('v-pedido')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
         </div>
         <div class="v-field">
-          <div class="v-field-label">Origen</div>
-          <div class="v-field-row"><div class="v-field-val" id="v-origen">—</div><button class="v-edit-btn" onclick="editField('v-origen')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
+          <div class="v-field-label">Zona y vehículo</div>
+          <div class="v-field-row"><div class="v-field-val" id="v-zona-display">—</div><button class="v-edit-btn" onclick="editField('v-zona-display')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
         </div>
-        <div class="v-field">
-          <div class="v-field-label">Destino</div>
-          <div class="v-field-row"><div class="v-field-val" id="v-destino">—</div><button class="v-edit-btn" onclick="editField('v-destino')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
-        </div>
-        <div class="v-field">
-          <div class="v-field-label">Peso (kg)</div>
-          <div class="v-field-row"><div class="v-field-val" id="v-peso">—</div><button class="v-edit-btn" onclick="editField('v-peso')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
-        </div>
-      </div>
-
-      <!-- Cálculo -->
-      <div class="v-card">
-        <div class="v-card-title">Cálculo automático</div>
-        <div class="calc-row"><span class="cr-label">Distancia</span><span class="cr-val" id="v-km">— km</span></div>
-        <div class="calc-row"><span class="cr-label">Tipo vehículo</span><span class="cr-val" id="v-transporte">—</span></div>
-        <div class="calc-row"><span class="cr-label">Zona</span><span class="cr-val" id="v-zona">—</span></div>
-        <div class="calc-row"><span class="cr-label">Km extra</span><span class="cr-val" id="v-kmextra">—</span></div>
       </div>
 
       <!-- INC/DEV -->
@@ -933,8 +916,46 @@ function extractPeso(text) {
   return 0;
 }
 
-async function processImageWithOCR(rawBase64) {
-  // Step 2: preprocess + OCR
+// Busca el centro en el texto completo del OCR
+function matchCentroFromText(text) {
+  const upper = text.toUpperCase();
+
+  // Obramat — detectar por ciudad
+  const OBRAMAT_CIUDADES = {
+    'HOSPITALET': 'Obramat Hospitalet', 'BADALONA': 'Obramat Badalona',
+    'SABADELL':   'Obramat Sabadell',   'TERRASSA':  'Obramat Terrassa',
+    'TERRASA':    'Obramat Terrassa',   'GIRONA':    'Obramat Girona',
+    'LLEIDA':     'Obramat Lleida',     'LERIDA':    'Obramat Lleida',
+    'VILANOVA':   'Obramat Vilanova',   'ALICANTE':  'Obramat Alicante',
+    'VALENCIA':   'Obramat Valencia',   'CASTELLON': 'Obramat Castellón',
+    'FINESTRAT':  'Obramat Finestrat',  'MASSANASSA':'Obramat Massanassa',
+  };
+  if (/OBRAMAT|BRICOMAN/i.test(upper)) {
+    for (const [ciudad, base] of Object.entries(OBRAMAT_CIUDADES)) {
+      if (upper.includes(ciudad)) {
+        const pedidos = CENTROS.find(c => c.toUpperCase() === `${base} PEDIDOS`.toUpperCase());
+        return pedidos || base;
+      }
+    }
+    return 'Obramat';
+  }
+
+  // Otros centros — matching directo por nombre en CENTROS
+  const stopwords = new Set(['DE','LA','EL','LOS','LAS','DEL','SLU','SL','NIF','DATOS','NOMBRE']);
+  const words = upper.split(/[\s,.\-\/\(\)]+/).filter(w => w.length > 3 && !stopwords.has(w));
+
+  const scores = CENTROS.map(c => {
+    const cu = c.toUpperCase();
+    let score = 0;
+    for (const w of words) if (cu.includes(w)) score += w.length;
+    return { c, score };
+  }).sort((a, b) => b.score - a.score);
+
+  console.log('[CENTRO] Top 3:', scores.slice(0,3).map(s=>`${s.c}(${s.score})`));
+  return scores[0]?.score > 4 ? scores[0].c : '';
+}
+
+
   stepActive(2, 'Mejorando imagen…');
   const processed = await preprocessImageForOCR(rawBase64);
 
@@ -944,47 +965,28 @@ async function processImageWithOCR(rawBase64) {
   });
   stepDone(2, `Texto extraído · ${rawText.length} caracteres`);
 
-  // Step 3: extraer campos focalizados
   stepActive(3, 'Identificando campos…');
+  const text = normalizeOCRText(rawText);
 
-  // ── Código de zona (escrito a mano por el transportista) ──
-  const codigoZona = extractCodigoZona(rawText);
+  // ── 1. CÓDIGO DE ZONA (escrito a mano: F1-F6, C1-C6) ─────
+  const zonaDetectada = extractCodigoZona(text);
 
-  // ── Número de pedido (junto a etiqueta conocida) ──────────
-  const numeroPedido = extractNumeroPedido(rawText);
+  // ── 2. NÚMERO (Nº albarán / pedido / documento) ───────────
+  const numero = extractNumeroPedido(text);
 
-  // ── Peso ──────────────────────────────────────────────────
-  const pesoKg = extractPeso(rawText);
+  // ── 3. CENTRO (por nombre/ciudad en el texto) ─────────────
+  const centro = matchCentroFromText(text);
 
-  // ── Centro (por ciudad en bloque origen) ─────────────────
-  const parsedCompleto = parseAlbaranRobusto(rawText);
-  const centro = matchCentro(parsedCompleto.nombreOrigen, parsedCompleto.nombreCargador, parsedCompleto.direccionOrigen, rawText);
-
-  // ── Destino: dirección + CP ───────────────────────────────
-  const dir = parsedCompleto.direccionDestino || '';
-  const cp  = parsedCompleto.cpDestino || '';
-  const destino = [dir, cp].filter(Boolean).join(', ') || '—';
-
-  // ── Origen: nombre del centro sin sufijo ─────────────────
-  const centroBase = (centro || parsedCompleto.nombreOrigen || '').replace(/\s+(Pedidos|Cesiones)(\s*-.*)?$/i, '').trim();
-
-  const camposOK = [numeroPedido, centroBase, destino, codigoZona].filter(Boolean).length;
-  stepDone(3, `${camposOK} campos identificados`);
+  const encontrados = [zonaDetectada, numero, centro].filter(Boolean).length;
+  stepDone(3, `${encontrados}/3 campos detectados`);
+  stepDone(4, zonaDetectada ? `${zonaDetectada.tipo} · Zona ${zonaDetectada.zona}` : 'Sin código de zona');
 
   return {
-    // Datos extraídos
-    numeroPedido,
+    numero,
     centro,
-    origen: centroBase || '—',
-    destino,
-    pesoKg,
-    pesoDisplay: `${pesoKg} kg`,
-    // Zona detectada automáticamente del código escrito a mano
-    zonaDetectada: codigoZona,
-    transporte: codigoZona ? codigoZona.tipo : getTransporte(pesoKg),
-    zona: codigoZona ? codigoZona.zona : null,
-    kmExtra: 0,
-    km: 0,
+    zonaDetectada,
+    transporte: zonaDetectada ? zonaDetectada.tipo : '—',
+    zona:       zonaDetectada ? zonaDetectada.zona : null,
     rawText,
   };
 }
@@ -1154,23 +1156,11 @@ async function processImage() {
   try {
     const parsed = await processImageWithOCR(capturedImageBase64);
 
-    // Step 4: zona y distancia
-    stepActive(4, 'Calculando zona…');
-    if (parsed.zonaDetectada) {
-      // Zona detectada del código escrito a mano — no necesitamos calcular distancia
-      parsed.km = 0;
-      parsed.kmExtra = 0;
-      stepDone(4, `Zona ${parsed.zona} · ${parsed.transporte} (manual)`);
-    } else {
-      // Sin código de zona — calcular distancia automáticamente
-      const origenFisico = getDireccionFisica(parsed.centro) || parsed.origen;
-      const km = await estimateDistance(origenFisico, parsed.destino);
-      parsed.km = km;
-      parsed.zona = getZona(km);
-      parsed.transporte = getTransporte(parsed.pesoKg);
-      parsed.kmExtra = getKmExtra(km);
-      stepDone(4, `${km} km · Zona ${parsed.zona}`);
-    }
+    // Step 4: completado
+    stepDone(4, parsed.zonaDetectada
+      ? `${parsed.zonaDetectada.tipo} · Zona ${parsed.zonaDetectada.zona}`
+      : 'Sin código de zona detectado'
+    );
 
     extractedData = parsed;
     setTimeout(() => showVerifyScreen(parsed), 500);
@@ -1240,15 +1230,23 @@ async function estimateDistance(origen, destino) {
 // VERIFY SCREEN
 // ══════════════════════════════════════════════════════════
 function showVerifyScreen(data) {
-  document.getElementById('v-centro').textContent    = data.centro || '—';
-  document.getElementById('v-pedido').textContent    = data.numeroPedido || '—';
-  document.getElementById('v-origen').textContent    = data.origen || '—';
-  document.getElementById('v-destino').textContent   = data.destino || '—';
-  document.getElementById('v-peso').textContent      = data.pesoDisplay || '—';
-  document.getElementById('v-km').textContent        = data.zonaDetectada ? '— (zona manual)' : `${data.km || 0} km`;
-  document.getElementById('v-transporte').textContent = data.transporte || '—';
-  document.getElementById('v-zona').textContent      = data.zona ? `Zona ${data.zona}${data.zonaDetectada ? ' ✓' : ''}` : '—';
-  document.getElementById('v-kmextra').textContent   = data.kmExtra > 0 ? `${data.kmExtra} km` : '—';
+  document.getElementById('v-centro').textContent      = data.centro || '—';
+  document.getElementById('v-pedido').textContent      = data.numero || '—';
+  document.getElementById('v-zona-display').textContent = data.zonaDetectada
+    ? `${data.zonaDetectada.tipo} · Zona ${data.zonaDetectada.zona}`
+    : '—';
+
+  // Reset extras
+  document.getElementById('v-horas-espera').value = '';
+  document.getElementById('v-grua-toggle').checked = false;
+  document.getElementById('v-grua-horas-wrap').style.display = 'none';
+  document.getElementById('v-horas-grua').value = '';
+  document.getElementById('v-comentario').value = '';
+  document.querySelectorAll('#incdv-pills .pill').forEach(p => p.classList.remove('selected'));
+  document.querySelector('#incdv-pills .pill[data-val=""]').classList.add('selected');
+
+  showScreen('verify');
+}
 
   // Reset extras
   document.getElementById('v-horas-espera').value = '';
@@ -1316,18 +1314,26 @@ document.getElementById('btn-manual-calc').addEventListener('click', async () =>
 async function sendToSheet(source) {
   const isVerify = source === 'verify';
   const pfx = isVerify ? 'v' : 'm';
-  const incDev     = document.querySelector(`#${isVerify ? 'incdv' : 'm-incdv'}-pills .pill.selected`)?.dataset.val || '';
+  const incDev      = document.querySelector(`#${isVerify ? 'incdv' : 'm-incdv'}-pills .pill.selected`)?.dataset.val || '';
   const horasEspera = document.getElementById(`${pfx}-horas-espera`).value;
-  const gruaOn     = document.getElementById(`${pfx}-grua-toggle`).checked;
-  const horasGrua  = gruaOn ? document.getElementById(`${pfx}-horas-grua`).value : '';
-  const comentario = document.getElementById(`${pfx}-comentario`).value;
+  const gruaOn      = document.getElementById(`${pfx}-grua-toggle`).checked;
+  const horasGrua   = gruaOn ? document.getElementById(`${pfx}-horas-grua`).value : '';
+  const comentario  = document.getElementById(`${pfx}-comentario`).value;
+
+  const centro   = isVerify ? document.getElementById('v-centro').textContent : document.getElementById('m-centro').value;
+  const numero   = isVerify ? document.getElementById('v-pedido').textContent : document.getElementById('m-pedido').value;
+  const zonaText = isVerify ? document.getElementById('v-zona-display').textContent : '';
+  const zonaMatch = zonaText.match(/([FC][a-z]+)\s*·\s*Zona\s*(\d)/i);
+  const transporte = isVerify ? (zonaMatch ? zonaMatch[1] : extractedData?.transporte || '—') : getTransporte(parseFloat(document.getElementById('m-peso')?.value) || 0);
+  const zona       = isVerify ? (zonaMatch ? `Zona ${zonaMatch[2]}` : '—') : `Zona ${getZona(0)}`;
 
   const payload = {
-    centro: extractedData.centro,
-    numeroPedido: extractedData.numeroPedido,
-    incDev, transporte: extractedData.transporte,
-    zona: `Zona ${extractedData.zona}`,
-    kmExtra: extractedData.kmExtra > 0 ? extractedData.kmExtra : '',
+    centro,
+    numeroPedido: numero,
+    incDev,
+    transporte,
+    zona,
+    kmExtra: '',
     horasEspera: horasEspera || '',
     servicioGrua: gruaOn ? 'SI' : 'NO',
     horasGrua: horasGrua || '',
@@ -1343,11 +1349,11 @@ async function sendToSheet(source) {
     const data = await res.json();
     hideLoading();
     if (data.success) {
-      document.getElementById('s-centro').textContent    = payload.centro;
-      document.getElementById('s-pedido').textContent    = payload.numeroPedido;
+      document.getElementById('s-centro').textContent     = payload.centro;
+      document.getElementById('s-pedido').textContent     = payload.numeroPedido;
       document.getElementById('s-transporte').textContent = payload.transporte;
-      document.getElementById('s-zona').textContent      = payload.zona;
-      document.getElementById('s-hora').textContent      = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('s-zona').textContent       = payload.zona;
+      document.getElementById('s-hora').textContent       = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
       showScreen('success');
     } else { showToast('Error al enviar. Inténtalo de nuevo.', true); }
   } catch(err) { hideLoading(); showToast('Error de conexión.', true); }
